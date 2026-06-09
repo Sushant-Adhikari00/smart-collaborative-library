@@ -130,6 +130,7 @@ We will:
 - Prepare data for embeddings
 - Build foundation for RAG system
 
+<<<<<<< HEAD
 
 # 📘 SCL AI SERVICE — PROJECT DOCUMENTATION
 
@@ -545,3 +546,37 @@ This will transform the system into:
 ---
 
 
+=======
+# Version: v0.2 (Step 2 Complete)
+
+## Text Processing Layer
+
+### Features Added
+- Text cleaning
+- Text normalization
+- Chunk generation
+- Overlapping chunk strategy
+
+### New Modules
+- text_cleaner.py
+- text_chunker.py
+
+### Pipeline
+
+PDF
+↓
+Extract Text
+↓
+Clean Text
+↓
+Chunk Text
+↓
+AI-Ready Chunks
+
+### Purpose
+
+Prepare extracted document text for:
+- Embeddings
+- Vector databases
+- Retrieval-Augmented Generation (RAG)
+>>>>>>> origin/development
