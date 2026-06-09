@@ -18,6 +18,6 @@ def chunk_text(
 
         chunks.append(chunk)
 
-        start += chunk_size - overlapgit
+        start += chunk_size - overlap
 
     return chunks
