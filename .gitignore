@@ -6,3 +6,5 @@
 >>>>>>> 48cee08 ( first commit in application.yml file)
 =======
 >>>>>>> origin/development
+__pycache__/
+*.pyc

@@ -18,10 +18,8 @@ def chunk_text(
 
         chunks.append(chunk)
 
-<<<<<<< HEAD
+
         start += chunk_size - overlap
-=======
-        start += chunk_size - overlapgit
->>>>>>> origin/development
+
 
     return chunks
