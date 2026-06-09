@@ -129,3 +129,36 @@ We will:
 - Clean and normalize text
 - Prepare data for embeddings
 - Build foundation for RAG system
+
+# Version: v0.2 (Step 2 Complete)
+
+## Text Processing Layer
+
+### Features Added
+- Text cleaning
+- Text normalization
+- Chunk generation
+- Overlapping chunk strategy
+
+### New Modules
+- text_cleaner.py
+- text_chunker.py
+
+### Pipeline
+
+PDF
+↓
+Extract Text
+↓
+Clean Text
+↓
+Chunk Text
+↓
+AI-Ready Chunks
+
+### Purpose
+
+Prepare extracted document text for:
+- Embeddings
+- Vector databases
+- Retrieval-Augmented Generation (RAG)
