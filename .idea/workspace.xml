@@ -4,11 +4,21 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="f4c83a32-f1d1-4c9b-95d4-50582264b381" name="Changes" comment="" />
+    <list default="true" id="f4c83a32-f1d1-4c9b-95d4-50582264b381" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/scl-backend/scl-backend/src/main/java/com/scl/scl_backend/modules/document/controller/DocumentController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Class" />
+      </list>
+    </option>
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -76,7 +86,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1780980750543</updated>
-      <workItem from="1780980753199" duration="920000" />
+      <workItem from="1780980753199" duration="3180000" />
     </task>
     <servers />
   </component>
