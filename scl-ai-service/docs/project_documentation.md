@@ -130,39 +130,209 @@ We will:
 - Prepare data for embeddings
 - Build foundation for RAG system
 
-# Version: v0.2 (Step 2 Complete)
 
-## Text Processing Layer
+# 📘 SCL AI SERVICE — PROJECT DOCUMENTATION
 
-### Features Added
-- Text cleaning
-- Text normalization
-- Chunk generation
-- Overlapping chunk strategy
+## Version: v0.2 (Text Processing Layer Complete)
 
-### New Modules
-- text_cleaner.py
-- text_chunker.py
+---
 
-### Pipeline
+# 🧠 1. Overview
 
-PDF
-↓
-Extract Text
-↓
+In this step, the system evolved from simple PDF text extraction into a **structured text processing pipeline**. The goal was to prepare raw extracted text for AI usage by cleaning and splitting it into meaningful chunks.
+
+This is a crucial step before embeddings and RAG (Retrieval-Augmented Generation).
+
+---
+
+# 📌 2. Completed Feature (Step 2)
+
+## 🧩 Text Processing Layer
+
+### 🎯 Objective:
+
+Transform raw extracted PDF text into **clean, structured, AI-ready chunks**.
+
+---
+
+# 🏗️ 3. System Architecture (Step 2)
+
+```text id="arch1"
+PDF File
+   ↓
+Text Extraction (PyMuPDF)
+   ↓
+Raw Text
+   ↓
+Text Cleaning (Regex normalization)
+   ↓
 Clean Text
-↓
-Chunk Text
-↓
-AI-Ready Chunks
+   ↓
+Text Chunking (Sliding Window)
+   ↓
+Structured Chunks
+```
 
-### Purpose
+---
 
-Prepare extracted document text for:
-- Embeddings
-- Vector databases
-- Retrieval-Augmented Generation (RAG)c
+# 📁 4. New Modules Introduced
 
+## 🧹 text_cleaner.py
+
+### Purpose:
+
+Clean raw extracted text from PDFs.
+
+### Responsibilities:
+
+* Remove extra spaces
+* Normalize whitespace
+* Strip unnecessary characters
+
+### Core Function:
+
+```python id="c1"
+def clean_text(text: str) -> str
+```
+
+---
+
+## ✂️ text_chunker.py
+
+### Purpose:
+
+Split large text into smaller overlapping chunks.
+
+### Responsibilities:
+
+* Divide text into fixed-size segments
+* Maintain context using overlap
+* Prepare text for embeddings
+
+### Core Function:
+
+```python id="c2"
+def chunk_text(text: str, chunk_size=500, overlap=100)
+```
+
+---
+
+# 🔄 5. Data Flow (Step 2)
+
+```text id="flow1"
+Raw PDF Text
+   ↓
+Cleaning (remove noise, normalize spaces)
+   ↓
+Chunking (split into manageable pieces)
+   ↓
+AI-ready text segments
+```
+
+---
+
+# ⚙️ 6. Key Concepts Introduced
+
+## 🧼 Text Cleaning
+
+Raw PDF text often contains:
+
+* Extra spaces
+* Broken lines
+* Formatting noise
+
+Cleaning ensures uniform text structure.
+
+---
+
+## ✂️ Chunking
+
+Large documents are split into smaller parts:
+
+### Why?
+
+* AI models cannot process very large text efficiently
+* Chunking improves retrieval accuracy
+* Enables scalable search systems
+
+---
+
+## 🔁 Overlapping Strategy
+
+Chunks overlap slightly to preserve meaning:
+
+Example:
+
+```
+Chunk 1: "machine learning is a subset of..."
+Chunk 2: "...a subset of artificial intelligence"
+```
+
+This prevents loss of context.
+
+---
+
+# 📊 7. Chunking Strategy Used
+
+| Parameter  | Value          |
+| ---------- | -------------- |
+| Chunk Size | 500 characters |
+| Overlap    | 100 characters |
+
+---
+
+# 🧠 8. Key Learnings
+
+* Raw extracted text is noisy and unstructured
+* Cleaning improves consistency for downstream AI tasks
+* Chunking is essential for semantic search and embeddings
+* Overlap improves contextual understanding
+* Modular pipeline design improves scalability
+
+---
+
+# 🚨 9. Issues Faced & Fixes
+
+| Issue               | Cause                 | Fix                           |
+| ------------------- | --------------------- | ----------------------------- |
+| Import errors       | Wrong module paths    | Fixed package structure       |
+| Overlap bug         | Typo in variable name | Corrected `overlap`           |
+| Chunk inconsistency | No overlap strategy   | Added sliding window approach |
+
+---
+
+# ✅ 10. Current Status
+
+✔ PDF extraction working
+✔ Text cleaning implemented
+✔ Chunking system functional
+✔ Data ready for embedding generation
+
+---
+
+# ⛔ 11. Not Yet Implemented
+
+* Embeddings generation
+* Vector database
+* Semantic search
+* RAG system
+* AI chatbot layer
+
+---
+
+# 🚀 12. Next Step Preview (Step 3)
+
+## 🧠 Embeddings Layer
+
+We will convert text chunks into numerical vectors so that AI can understand meaning and similarity between texts.
+
+This enables:
+
+* Semantic search
+* AI-powered retrieval
+* Chat with documents
+
+---
 
 
 # 📘 SCL AI SERVICE — PROJECT DOCUMENTATION
