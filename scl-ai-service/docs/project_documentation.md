@@ -545,38 +545,222 @@ This will transform the system into:
 
 ---
 
+===
 
-=======
-# Version: v0.2 (Step 2 Complete)
+# 📘 SCL AI SERVICE — PROJECT DOCUMENTATION
 
-## Text Processing Layer
+## Version: v0.4 (FAISS Vector Database Layer Complete)
 
-### Features Added
-- Text cleaning
-- Text normalization
-- Chunk generation
-- Overlapping chunk strategy
+---
 
-### New Modules
-- text_cleaner.py
-- text_chunker.py
+# 🧠 1. Overview
 
-### Pipeline
+In this stage, the system evolves into a **semantic search engine** by introducing a vector database using **FAISS (Facebook AI Similarity Search)**.
 
-PDF
-↓
-Extract Text
-↓
-Clean Text
-↓
-Chunk Text
-↓
-AI-Ready Chunks
+This enables the system to store embeddings and perform fast similarity-based retrieval, forming the core of a **RAG (Retrieval-Augmented Generation)** system.
 
-### Purpose
+---
 
-Prepare extracted document text for:
-- Embeddings
-- Vector databases
-- Retrieval-Augmented Generation (RAG)
->>>>>>> origin/development
+# 📌 2. Completed Feature (Step 4)
+
+## 🧠 FAISS Vector Database Layer
+
+### 🎯 Objective:
+
+Store document embeddings and enable fast semantic search over PDF content.
+
+---
+
+# 🏗️ 3. System Architecture (Step 4)
+
+```text id="arch1"
+PDF File
+   ↓
+Text Extraction (PyMuPDF)
+   ↓
+Text Cleaning
+   ↓
+Chunking
+   ↓
+Embeddings (SentenceTransformers)
+   ↓
+FAISS Vector Index
+   ↓
+Semantic Search (Top-K retrieval)
+```
+
+---
+
+# 📁 4. New Module Introduced
+
+## 🧠 faiss_store.py
+
+### Purpose:
+
+Implements a FAISS-based vector database for storing and searching embeddings.
+
+### Core Responsibilities:
+
+* Store document chunks
+* Store embeddings as vectors
+* Perform similarity search
+* Retrieve most relevant chunks
+
+---
+
+### 📌 Class: FAISSVectorStore
+
+```python id="code1"
+class FAISSVectorStore:
+```
+
+### Key Methods:
+
+#### 1. `__init__(dimension)`
+
+* Initializes FAISS index
+* Creates storage for chunks
+
+#### 2. `add_documents(chunks, embeddings)`
+
+* Stores chunk text
+* Converts embeddings to float32
+* Adds vectors to FAISS index
+
+#### 3. `search(query_embedding, top_k=5)`
+
+* Finds most similar vectors
+* Returns matching text chunks
+
+---
+
+# 🔄 5. Data Flow (Step 4)
+
+```text id="flow1"
+Chunks + Embeddings
+        ↓
+FAISS Index Storage
+        ↓
+Query Embedding
+        ↓
+Similarity Search
+        ↓
+Top Matching Chunks
+```
+
+---
+
+# ⚙️ 6. Technologies Used
+
+| Component            | Technology           |
+| -------------------- | -------------------- |
+| Vector Database      | FAISS (Facebook AI)  |
+| Numerical Processing | NumPy                |
+| Embeddings           | SentenceTransformers |
+| Similarity Metric    | L2 Distance          |
+
+---
+
+# 🧠 7. Key Concepts Introduced
+
+## 📦 Vector Database
+
+A system that stores numerical representations (embeddings) of text for fast similarity search.
+
+---
+
+## 🔍 Semantic Search
+
+Instead of keyword matching, the system finds meaning-based similar content.
+
+---
+
+## 📊 Embedding Indexing
+
+Each text chunk is converted into a vector and stored in FAISS for retrieval.
+
+---
+
+## ⚡ FAISS Index
+
+A high-performance similarity search engine optimized for large-scale vector operations.
+
+---
+
+# 🧪 8. Testing
+
+### Test File:
+
+```text id="test1"
+tests/test_faiss.py
+```
+
+### Purpose:
+
+* Load PDF
+* Extract text
+* Clean text
+* Chunk text
+* Generate embeddings
+* Store in FAISS
+* Perform similarity search
+
+---
+
+### Expected Output:
+
+```text id="out1"
+🔍 TOP RESULTS:
+
+- Relevant chunk 1...
+- Relevant chunk 2...
+- Relevant chunk 3...
+```
+
+---
+
+# 🚨 9. Issues Faced & Fixes
+
+| Issue                          | Cause                  | Fix                             |
+| ------------------------------ | ---------------------- | ------------------------------- |
+| ImportError (FAISSVectorStore) | Class mismatch or typo | Fixed class name                |
+| Type errors in FAISS           | Wrong data type        | Converted embeddings to float32 |
+| Model download delay           | HuggingFace download   | Normal first-time load          |
+
+---
+
+# ✅ 10. Current Status
+
+✔ PDF extraction working
+✔ Text cleaning stable
+✔ Chunking functional
+✔ Embeddings generated successfully
+✔ FAISS vector storage implemented
+✔ Semantic search working
+
+---
+
+# ⛔ 11. Not Yet Implemented
+
+* Query-to-answer generation (LLM integration)
+* RAG pipeline (context + AI response)
+* FastAPI backend integration
+* Chat interface
+* Persistent disk storage for FAISS index
+
+---
+
+# 🚀 12. Next Step Preview (Step 5)
+
+## 🤖 RAG (Retrieval-Augmented Generation) System
+
+We will now build the AI reasoning layer that:
+
+* Accepts user questions
+* Converts them to embeddings
+* Searches FAISS for relevant chunks
+* Sends context to an LLM
+* Generates final AI answer
+
+---
+
