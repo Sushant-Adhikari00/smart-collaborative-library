@@ -1,0 +1,11 @@
+spring:
+  application:
+    name: scl-backend
+
+  autoconfigure:
+    exclude=org:
+      springframework:
+        boot:
+          autoconfigure:
+            jdbc:
+              DataSourceAutoConfiguration:
