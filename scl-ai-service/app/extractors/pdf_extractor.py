@@ -2,11 +2,24 @@ import fitz  # PyMuPDF
 
 
 def extract_text_from_pdf(file_path: str) -> str:
-    doc = fitz.open(file_path)
-    text = ""
+    """
+    Extract text from a PDF using PyMuPDF.
+    Works for normal text-based PDFs.
+    """
 
-    for page in doc:
-        text += page.get_text() + "\n"
+    try:
+        doc = fitz.open(file_path)
+        text = []
 
-    doc.close()
-    return text.strip()
+        for page in doc:
+            page_text = page.get_text()
+
+            if page_text:
+                text.append(page_text)
+
+        doc.close()
+
+        return "\n".join(text).strip()
+
+    except Exception as e:
+        return f"Error reading PDF: {str(e)}"
