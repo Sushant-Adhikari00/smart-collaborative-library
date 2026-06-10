@@ -1,11 +1,25 @@
+server:
+  port: 8080
 spring:
+
   application:
     name: scl-backend
 
-  autoconfigure:
-    exclude=org:
-      springframework:
-        boot:
-          autoconfigure:
-            jdbc:
-              DataSourceAutoConfiguration:
+  datasource:
+    url: ${DB_URL:jdbc:mysql://localhost:3306/scl_db}
+    username: ${DB_USER:scl_user}
+    password: ${DB_PASS:scl_pass}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+    database-platform: org.hibernate.dialect.MySQL8Dialect
+
+  sql:
+    init:
+      mode: always
