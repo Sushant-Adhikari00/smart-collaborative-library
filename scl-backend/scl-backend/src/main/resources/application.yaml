@@ -1,11 +1,22 @@
+server:
+  port: 8080
 spring:
   application:
     name: scl-backend
 
-  autoconfigure:
-    exclude=org:
-      springframework:
-        boot:
-          autoconfigure:
-            jdbc:
-              DataSourceAutoConfiguration:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/smart_learining_library_db
+    username: admin
+    password: root
+
+  jpa:
+    hibernate:
+      ddl-auto: none   # let Liquibase handle schema, not Hibernate
+    database-platform: org.hibernate.dialect.MySQLDialect
+    show-sql: true
+
+  liquibase:
+    enabled: true
+    change-log: classpath:/db/changelog/changelog-master.yaml
+    contexts: dev
