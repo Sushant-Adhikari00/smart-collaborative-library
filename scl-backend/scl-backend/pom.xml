@@ -8,7 +8,9 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>4.0.6</version>
+        <!-- FIX: 4.0.6 does not exist on Maven Central. Spring Boot is on the 3.x line.
+             Adjust to whichever 3.x version your team has standardized on. -->
+        <version>3.3.6</version>
         <relativePath/>
     </parent>
 
@@ -29,6 +31,14 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
+
+        <!-- ADDED: required for WebClient (calling FastAPI from AIServiceClient / WebClientConfig).
+             Does not make your app reactive — WebClient works fine alongside @RestController MVC. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webflux</artifactId>
+        </dependency>
+
         <dependency>
             <groupId>org.liquibase</groupId>
             <artifactId>liquibase-core</artifactId>
@@ -87,7 +97,7 @@
             <scope>runtime</scope>
         </dependency>
 
-        <!-- Apache Tika -->
+        <!-- Apache Tika: text extraction for PDF, DOCX, XLS, CSV, JPEG -->
         <dependency>
             <groupId>org.apache.tika</groupId>
             <artifactId>tika-core</artifactId>
@@ -99,14 +109,16 @@
             <version>2.9.3</version>
         </dependency>
 
-        <!-- Video/Audio Processing -->
-<!--        <dependency>-->
-<!--            <groupId>ws.schild</groupId>-->
-<!--            <artifactId>jave-all-deps</artifactId>-->
-<!--            <version>4.2.0</version>-->
-<!--        </dependency>-->
+        <!-- Video/Audio Processing — uncomment when you start handling video uploads -->
+        <!--
+        <dependency>
+            <groupId>ws.schild</groupId>
+            <artifactId>jave-all-deps</artifactId>
+            <version>4.2.0</version>
+        </dependency>
+        -->
 
-        <!-- Rate Limiting -->
+        <!-- Rate Limiting — for RateLimitInterceptor on AI-facing endpoints -->
         <dependency>
             <groupId>com.bucket4j</groupId>
             <artifactId>bucket4j-core</artifactId>
@@ -120,7 +132,8 @@
             <version>2.6.0</version>
         </dependency>
 
-        <!-- AWS S3 -->
+        <!-- AWS S3 — keep staged for when FileStorageUtil moves off local disk.
+             Currently unused; remove if you decide to stick with local/MinIO storage. -->
         <dependency>
             <groupId>software.amazon.awssdk</groupId>
             <artifactId>s3</artifactId>

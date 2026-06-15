@@ -1,22 +1,38 @@
 server:
   port: 8080
+
+app:                          # ← moved OUT of spring, now top-level
+  upload:
+    dir: uploads/documents
+
 spring:
   application:
     name: scl-backend
 
   datasource:
+    url: jdbc:mysql://localhost:3306/smart_collaborative_library_db
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/smart_learining_library_db
-    username: admin
-    password: root
 
   jpa:
     hibernate:
-      ddl-auto: none   # let Liquibase handle schema, not Hibernate
+      ddl-auto: none
+    database: mysql
     database-platform: org.hibernate.dialect.MySQLDialect
     show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 10MB
+      max-request-size: 10MB
 
   liquibase:
     enabled: true
     change-log: classpath:/db/changelog/changelog-master.yaml
     contexts: dev
+    clear-checksums: true
