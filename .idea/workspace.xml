@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="f4c83a32-f1d1-4c9b-95d4-50582264b381" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/scl-backend/scl-backend/src/main/java/com/scl/scl_backend/modules/core/dto/FileStorageUtil.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/scl-backend/scl-backend/src/main/java/com/scl/scl_backend/modules/security/SecurityConfig.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/scl-backend/scl-backend/src/main/resources/db/changelog/changelog-master.yaml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/scl-backend/scl-backend/src/main/resources/db/changelog/migrations/001-create-category-table.yaml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/scl-backend/scl-backend/src/main/resources/db/changelog/migrations/002-create-document-table.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/scl-ai-service/gitIgnore" beforeDir="false" afterPath="$PROJECT_DIR$/scl-ai-service/gitIgnore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/scl-backend/scl-backend/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/scl-backend/scl-backend/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/scl-backend/scl-backend/src/main/java/com/scl/scl_backend/modules/document/controller/DocumentController.java" beforeDir="false" afterPath="$PROJECT_DIR$/scl-backend/scl-backend/src/main/java/com/scl/scl_backend/modules/document/controller/DocumentController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/scl-backend/scl-backend/src/main/java/com/scl/scl_backend/modules/document/dto/DocumentUpdateRequest.java" beforeDir="false" afterPath="$PROJECT_DIR$/scl-backend/scl-backend/src/main/java/com/scl/scl_backend/modules/document/dto/DocumentUpdateRequest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/scl-backend/scl-backend/src/main/java/com/scl/scl_backend/modules/document/entity/Category.java" beforeDir="false" afterPath="$PROJECT_DIR$/scl-backend/scl-backend/src/main/java/com/scl/scl_backend/modules/document/entity/Category.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/scl-backend/scl-backend/src/main/java/com/scl/scl_backend/modules/document/repository/DocumentRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/scl-backend/scl-backend/src/main/java/com/scl/scl_backend/modules/document/repository/DocumentRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/scl-backend/scl-backend/src/main/java/com/scl/scl_backend/modules/document/service/DocumentServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/scl-backend/scl-backend/src/main/java/com/scl/scl_backend/modules/document/service/DocumentServiceImpl.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/scl-backend/scl-backend/src/main/resources/application.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/scl-backend/scl-backend/src/main/resources/application.yaml" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Enum" />
+        <option value="Interface" />
+        <option value="Class" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;Sudip9825&quot;
+  }
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/Sushant-Adhikari00/smart-collaborative-library&quot;,
+    &quot;accountId&quot;: &quot;0ae5b5f5-c5ce-4cf9-9249-70c7b0a6d333&quot;
+  }
+}</component>
+  <component name="KubernetesApiPersistence">{}</component>
+  <component name="KubernetesApiProvider">{
+  &quot;isMigrated&quot;: true
+}</component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 0
+}</component>
+  <component name="ProjectId" id="3EswnDMXuZkNaaUVt5nmB0eGH4I" />
+  <component name="ProjectLevelVcsManager">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Maven.smart-learning-system [clean].executor&quot;: &quot;Run&quot;,
+    &quot;Maven.smart-learning-system [install].executor&quot;: &quot;Run&quot;,
+    &quot;Maven.smart-learning-system [org.apache.maven.plugins:maven-install-plugin:3.1.4:help].executor&quot;: &quot;Run&quot;,
+    &quot;RequestMappingsPanelOrder0&quot;: &quot;0&quot;,
+    &quot;RequestMappingsPanelOrder1&quot;: &quot;1&quot;,
+    &quot;RequestMappingsPanelWidth0&quot;: &quot;75&quot;,
+    &quot;RequestMappingsPanelWidth1&quot;: &quot;75&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;Spring Boot.SclBackendApplication.executor&quot;: &quot;Run&quot;,
+    &quot;com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;#9 on feature-controller&quot;,
+    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
+    &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;to.speed.mode.migration.done&quot;: &quot;true&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  },
+  &quot;keyToStringList&quot;: {
+    &quot;DatabaseDriversLRU&quot;: [
+      &quot;mysql&quot;
+    ]
+  }
+}</component>
+  <component name="RunManager">
+    <configuration name="SclBackendApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
+      <envs>
+        <env name="DB_USER" value="admin" />
+        <env name="DB_PASSWORD" value="root" />
+      </envs>
+      <module name="smart-learning-system" />
+      <option name="SPRING_BOOT_MAIN_CLASS" value="com.scl.scl_backend.SclBackendApplication" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-jdk-9823dce3aa75-bf35d07a577b-intellij.indexing.shared.core-IU-252.27397.103" />
+        <option value="bundled-js-predefined-d6986cc7102b-3aa1da707db6-JavaScript-IU-252.27397.103" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="f4c83a32-f1d1-4c9b-95d4-50582264b381" name="Changes" comment="" />
+      <created>1780980750543</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1780980750543</updated>
+      <workItem from="1780980753199" duration="3180000" />
+      <workItem from="1781018744209" duration="9180000" />
+      <workItem from="1781082778901" duration="3194000" />
+      <workItem from="1781086210405" duration="465000" />
+      <workItem from="1781107842066" duration="734000" />
+      <workItem from="1781161786657" duration="933000" />
+      <workItem from="1781166151821" duration="110000" />
+      <workItem from="1781249918107" duration="5686000" />
+      <workItem from="1781349325758" duration="14521000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+</project>
