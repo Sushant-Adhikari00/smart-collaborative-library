@@ -1,44 +1,29 @@
 server:
   port: 8080
-<<<<<<< HEAD
 
-app:                          # ← moved OUT of spring, now top-level
+app:
   upload:
     dir: uploads/documents
 
-=======
->>>>>>> origin/development
 spring:
-
   application:
     name: scl-backend
 
   datasource:
-<<<<<<< HEAD
     url: jdbc:mysql://localhost:3306/smart_collaborative_library_db
     username: ${DB_USER}
     password: ${DB_PASSWORD}
-=======
-    url: ${DB_URL:jdbc:mysql://localhost:3306/scl_db}
-    username: ${DB_USER:scl_user}
-    password: ${DB_PASS:scl_pass}
->>>>>>> origin/development
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
     hibernate:
-<<<<<<< HEAD
-      ddl-auto: none
+      ddl-auto: none          # Liquibase owns the schema — Hibernate must not also create/alter tables
     database: mysql
     database-platform: org.hibernate.dialect.MySQLDialect
-=======
-      ddl-auto: update
->>>>>>> origin/development
     show-sql: true
     properties:
       hibernate:
         format_sql: true
-<<<<<<< HEAD
 
   servlet:
     multipart:
@@ -51,10 +36,3 @@ spring:
     change-log: classpath:/db/changelog/changelog-master.yaml
     contexts: dev
     clear-checksums: true
-=======
-    database-platform: org.hibernate.dialect.MySQL8Dialect
-
-  sql:
-    init:
-      mode: always
->>>>>>> origin/development
