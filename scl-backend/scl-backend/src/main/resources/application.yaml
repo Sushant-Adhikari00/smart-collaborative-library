@@ -10,7 +10,7 @@ spring:
     name: scl-backend
 
   datasource:
-    url: jdbc:mysql://localhost:3306/smart_collaborative_library_db
+    url: ${DB_URL}
     username: ${DB_USER}
     password: ${DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -36,3 +36,8 @@ spring:
     change-log: classpath:/db/changelog/changelog-master.yaml
     contexts: dev
     clear-checksums: true
+
+supabase:
+  url: ${SUPABASE_URL}
+  key: ${SUPABASE_KEY}     # from Supabase dashboard → Settings → API
+  bucket: Porject_files             # name of the bucket you create in Supabase

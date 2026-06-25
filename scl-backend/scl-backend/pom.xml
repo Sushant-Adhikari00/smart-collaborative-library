@@ -8,8 +8,6 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <!-- FIX: 4.0.6 does not exist on Maven Central. Spring Boot is on the 3.x line.
-             Adjust to whichever 3.x version your team has standardized on. -->
         <version>3.3.6</version>
         <relativePath/>
     </parent>
@@ -107,6 +105,10 @@
             <groupId>org.apache.tika</groupId>
             <artifactId>tika-parsers-standard-package</artifactId>
             <version>2.9.3</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webflux</artifactId>
         </dependency>
 
         <!-- Video/Audio Processing — uncomment when you start handling video uploads -->
