@@ -9,7 +9,7 @@ import com.scl.scl_backend.modules.document.entity.Document;
 import com.scl.scl_backend.modules.document.entity.DocumentStatus;
 import com.scl.scl_backend.modules.document.repository.CategoryRepository;
 import com.scl.scl_backend.modules.document.repository.DocumentRepository;
-import com.scl.scl_backend.modules.core.dto.FileStorageUtil;
+import com.scl.scl_backend.modules.core.dto.SupabaseStorageUtil;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,7 +30,7 @@ public class DocumentServiceImpl implements DocumentService {
 
     private final DocumentRepository documentRepository;
     private final CategoryRepository categoryRepository;
-    private final FileStorageUtil fileStorageUtil;
+    private final SupabaseStorageUtil supabaseStorageUtil;
 
     // ─────────────────────────────────────────────────────────────────
     // UPLOAD
@@ -55,7 +55,7 @@ public class DocumentServiceImpl implements DocumentService {
             }
 
             // 3. Save the physical file to disk, get back a relative path/URL
-            String fileUrl = fileStorageUtil.storeFile(file);
+            String fileUrl = supabaseStorageUtil.storeFile(file);
 
             // 4. Build the Document entity
             Document document = new Document();
@@ -250,7 +250,7 @@ public class DocumentServiceImpl implements DocumentService {
             Document document = documentOpt.get();
 
             // Remove the physical file from disk first
-            fileStorageUtil.deleteFile(document.getFileUrl());
+            supabaseStorageUtil.deleteFile(document.getFileUrl());
 
             // Then remove the DB record
             documentRepository.delete(document);
