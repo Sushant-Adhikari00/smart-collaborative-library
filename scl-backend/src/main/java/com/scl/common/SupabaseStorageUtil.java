@@ -23,31 +23,23 @@ public class SupabaseStorageUtil {
     @Value("${supabase.bucket}")
     private String bucket;
 
-    // WebClient bean injected from WebClientConfig
+
     private final WebClient webClient;
 
-    // Constructor injection — Spring finds the WebClient bean from WebClientConfig
     public SupabaseStorageUtil(WebClient webClient) {
         this.webClient = webClient;
     }
 
-    // ─────────────────────────────────────────────────────────────────
-    // UPLOAD — saves file to Supabase bucket, returns public URL
-    // That public URL is what gets stored in Document.fileUrl column
-    // ─────────────────────────────────────────────────────────────────
     public String storeFile(MultipartFile file) {
         try {
-            // Step 1: generate a unique filename (uuid + original extension)
-            // e.g. "lecture.pdf" → "8cf4d5a9-xxxx.pdf"
+
             String extension = getExtension(file.getOriginalFilename());
             String uniqueFilename = UUID.randomUUID() + extension;
 
-            // Step 2: build the Supabase upload URL
-            // format: {supabaseUrl}/storage/v1/object/{bucket}/{filename}
+
             String uploadUrl = supabaseUrl + "/storage/v1/object/"
                     + bucket + "/" + uniqueFilename;
 
-            // Step 3: POST the file bytes to Supabase
             webClient.post()
                     .uri(uploadUrl)
                     .header("apikey", supabaseKey)
@@ -59,11 +51,7 @@ public class SupabaseStorageUtil {
                     .bodyValue(file.getBytes())
                     .retrieve()
                     .toBodilessEntity()
-                    .block(); // block() = wait for response (synchronous)
-
-            // Step 4: build and return the public URL
-            // This is the URL anyone can use to view/download the file
-            // format: {supabaseUrl}/storage/v1/object/public/{bucket}/{filename}
+                    .block();
             String publicUrl = supabaseUrl + "/storage/v1/object/public/"
                     + bucket + "/" + uniqueFilename;
 
@@ -76,16 +64,10 @@ public class SupabaseStorageUtil {
         }
     }
 
-    // ─────────────────────────────────────────────────────────────────
-    // DELETE — removes file from Supabase bucket
-    // Called when a Document is deleted from the system
-    // ─────────────────────────────────────────────────────────────────
     public void deleteFile(String fileUrl) {
         try {
             if (fileUrl == null || fileUrl.isBlank()) return;
 
-            // Extract just the filename from the full URL
-            // e.g. "https://xxx.supabase.co/.../8cf4d5a9.pdf" → "8cf4d5a9.pdf"
             String filename = fileUrl.substring(fileUrl.lastIndexOf("/") + 1);
 
             String deleteUrl = supabaseUrl + "/storage/v1/object/"
@@ -102,16 +84,12 @@ public class SupabaseStorageUtil {
             log.info("Deleted from Supabase: {}", filename);
 
         } catch (Exception e) {
-            // Log but don't throw — if file is already gone,
-            // we still want the DB record to be deleted
+
             log.warn("Supabase delete failed: {}", e.getMessage());
         }
     }
 
-    // ─────────────────────────────────────────────────────────────────
-    // HELPER — extracts file extension from filename
-    // "lecture.pdf" → ".pdf" | "notes" → ""
-    // ─────────────────────────────────────────────────────────────────
+
     private String getExtension(String filename) {
         if (filename != null && filename.contains(".")) {
             return filename.substring(filename.lastIndexOf("."));

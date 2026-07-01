@@ -39,5 +39,5 @@ spring:
 
 supabase:
   url: ${SUPABASE_URL}
-  key: ${SUPABASE_KEY}     # from Supabase dashboard → Settings → API
-  bucket: Porject_files             # name of the bucket you create in Supabase
+  key: ${SUPABASE_KEY}
+  bucket: Porject_files
