@@ -3,3 +3,7 @@ __pycache__/
 *.pyc
 .env
 uploads/
+faiss_data/
+*.egg-info/
+dist/
+build/
