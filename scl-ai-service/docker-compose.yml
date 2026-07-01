@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  ai-service:
+    build: .
+    container_name: scl-ai-service
+    ports:
+      - "8000:8000"
+    environment:
+      # Tell the app to look for Ollama inside the docker network
+      - OLLAMA_BASE_URL=http://ollama:11434
+      - OLLAMA_MODEL=llama3.1
+      - FAISS_INDEX_DIR=/app/faiss_data
+      - UPLOAD_DIR=/app/uploads
+    volumes:
+      - faiss_data:/app/faiss_data
+      - uploads:/app/uploads
+    depends_on:
+      - ollama
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: scl-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    # If deploying on a machine with an NVIDIA GPU, uncomment the block below to enable GPU acceleration:
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: all
+    #           capabilities: [gpu]
+
+volumes:
+  faiss_data:
+  uploads:
+  ollama_data:

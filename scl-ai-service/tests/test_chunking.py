@@ -4,13 +4,14 @@ import os
 # Add project root to Python path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from app.extractors.pdf_extractor import extract_text_from_pdf
+from app.processors.pdf import process_pdf
 from app.processors.text_cleaner import clean_text
 from app.processors.text_chunker import chunk_text
 
 
 def test_chunking():
-    text = extract_text_from_pdf("Chapter1-MobApp.pdf")
+    result = process_pdf("Chapter1-MobApp.pdf")
+    text = result["text"]
 
     cleaned = clean_text(text)
 
