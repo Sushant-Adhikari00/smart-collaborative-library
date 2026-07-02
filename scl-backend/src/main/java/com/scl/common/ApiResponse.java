@@ -1,33 +1,45 @@
 package com.scl.common;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
 @Data
-@AllArgsConstructor
+@Builder
 @NoArgsConstructor
+@AllArgsConstructor
 public class ApiResponse<T> {
     private boolean success;
     private String message;
-    private int statusCode;
-    @JsonFormat(pattern="yyyy-MM-dd hh:mm:s a" )
-    private LocalDateTime timestamp;
     private T data;
+    
+    @Builder.Default
+    private LocalDateTime timestamp = LocalDateTime.now();
 
-    public ApiResponse(boolean success, String message, int statusCode, LocalDateTime timestamp) {
-        this.success = success;
-        this.message = message;
-        this.statusCode = statusCode;
-        this.timestamp = timestamp;
+    public static <T> ApiResponse<T> success(T data) {
+        return ApiResponse.<T>builder()
+                .success(true)
+                .message("Success")
+                .data(data)
+                .build();
     }
 
-    public ApiResponse(boolean success, String message, int statusCode) {
-        this.success = success;
-        this.message = message;
-        this.statusCode = statusCode;
+    public static <T> ApiResponse<T> success(String message, T data) {
+        return ApiResponse.<T>builder()
+                .success(true)
+                .message(message)
+                .data(data)
+                .build();
+    }
+
+    public static <T> ApiResponse<T> error(String message) {
+        return ApiResponse.<T>builder()
+                .success(false)
+                .message(message)
+                .data(null)
+                .build();
     }
 }

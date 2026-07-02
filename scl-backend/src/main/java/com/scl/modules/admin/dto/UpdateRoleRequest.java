@@ -1,24 +1,18 @@
 package com.scl.modules.admin.dto;
 
 import com.scl.modules.auth.entity.Role;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
-
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class AdminUserResponse {
-    private Long id;
-    private String uuid;
-    private String email;
-    private String fullName;
+public class UpdateRoleRequest {
+
+    @NotNull(message = "Role is required")
     private Role role;
-    private Boolean isActive;
-    private long documentCount;
-    private LocalDateTime createdAt;
 }

@@ -1,4 +1,4 @@
-package com.scl.modules.admin.dto;
+package com.scl.modules.auth.dto;
 
 import com.scl.modules.auth.entity.Role;
 import lombok.AllArgsConstructor;
@@ -6,19 +6,15 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
-
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class AdminUserResponse {
+public class UserDTO {
     private Long id;
     private String uuid;
     private String email;
     private String fullName;
     private Role role;
-    private Boolean isActive;
-    private long documentCount;
-    private LocalDateTime createdAt;
+    private String profilePicture;
 }
