@@ -1,3 +1,7 @@
 databaseChangeLog:
   - include:
-      file: db/changelog/migrations/001-create-users-and-audit-logs.yaml
+      file: db/changelog/migrations/001-create-category-table.yaml
+  - include:
+      file: db/changelog/migrations/002-create-document-table.yaml
+  - include:
+      file: db/changelog/migrations/003-create-users-and-audit-logs.yaml
