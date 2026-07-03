@@ -51,7 +51,7 @@ databaseChangeLog:
 
               - column:
                   name: upload_date
-                  type: DATETIME
+                  type: TIMESTAMP
 
               - column:
                   name: uploaded_by
