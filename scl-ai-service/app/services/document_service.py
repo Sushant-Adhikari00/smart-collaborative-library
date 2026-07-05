@@ -106,6 +106,93 @@ class DocumentService:
                 except OSError:
                     pass
 
+    async def process_url(self, file_url: str) -> dict:
+        """
+        Process a file directly from a URL (e.g. Supabase public URL).
+        """
+        import aiohttp
+        from urllib.parse import urlparse
+        
+        file_path = None
+        try:
+            # Parse filename from URL
+            parsed_url = urlparse(file_url)
+            filename = os.path.basename(parsed_url.path)
+            if not filename:
+                filename = "downloaded_file"
+                
+            _, ext = os.path.splitext(filename)
+            unique_name = f"{uuid.uuid4().hex}{ext}"
+            file_path = os.path.join(self.upload_dir, unique_name)
+            
+            # Download file
+            logger.info(f"Downloading file from URL: {file_url}")
+            async with aiohttp.ClientSession() as session:
+                async with session.get(file_url) as response:
+                    if response.status != 200:
+                        raise Exception(f"Failed to download file, status {response.status}")
+                    content = await response.read()
+                    
+            with open(file_path, "wb") as f:
+                f.write(content)
+                
+            logger.info(f"Saved downloaded file to: {file_path}")
+            
+            # 2. Get file category for response
+            file_category = get_file_type_category(ext)
+
+            # 3. Route to correct processor and extract text
+            result = route_file(file_path)
+            raw_text = result["text"]
+            logger.info(
+                f"Extracted {len(raw_text)} characters (type={result['type']})"
+            )
+
+            # 4. Clean text
+            cleaned_text = clean_text(raw_text)
+            logger.info(f"Cleaned text: {len(cleaned_text)} characters")
+
+            # 5. Chunk text
+            chunks = chunk_text(
+                cleaned_text,
+                chunk_size=self.chunk_size,
+                overlap=self.chunk_overlap,
+            )
+            logger.info(f"Created {len(chunks)} chunks")
+
+            # 6. Generate embeddings
+            embeddings = self.embedding_service.embed(chunks)
+            logger.info(f"Generated {len(embeddings)} embeddings")
+
+            # 7. Store in FAISS
+            self.vector_store.add_documents(chunks, embeddings)
+            logger.info(
+                f"Stored in FAISS (total documents: {self.vector_store.document_count})"
+            )
+
+            # 8. Generate summary via LLM
+            summary_result = self.summary_service.generate_summary(cleaned_text)
+
+            return {
+                "text": cleaned_text,
+                "summary": summary_result,
+                "type": file_category,
+                "chunks_count": len(chunks),
+            }
+
+        except Exception as e:
+            logger.error(f"URL processing failed: {e}")
+            raise
+
+        finally:
+            # Clean up saved file
+            if file_path and os.path.exists(file_path):
+                try:
+                    os.remove(file_path)
+                    logger.debug(f"Cleaned up temporary file: {file_path}")
+                except OSError:
+                    pass
+
     async def _save_file(self, file) -> str:
         """Save an uploaded file to the upload directory."""
         # Generate a unique filename to avoid collisions
