@@ -4,16 +4,17 @@ import os
 # Add project root to Python path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from app.extractors.pdf_extractor import extract_text_from_pdf
+from app.processors.pdf import process_pdf
 from app.processors.text_cleaner import clean_text
 from app.processors.text_chunker import chunk_text
-from app.embeddings.embedder import get_embeddings
+from app.embeddings.embedder import EmbeddingService
 from app.vectorstore.faiss_store import FAISSVectorStore
 
 
 def test_faiss():
     # Step 1: Extract
-    text = extract_text_from_pdf("Chapter1-MobApp.pdf")
+    result = process_pdf("Chapter1-MobApp.pdf")
+    text = result["text"]
 
     # Step 2: Clean
     cleaned = clean_text(text)
@@ -22,11 +23,11 @@ def test_faiss():
     chunks = chunk_text(cleaned)
 
     # Step 4: Embeddings
-    embeddings = get_embeddings(chunks)
+    embedder = EmbeddingService()
+    embeddings = embedder.embed(chunks)
 
     # Step 5: FAISS setup
-    dimension = len(embeddings[0])
-    store = FAISSVectorStore(dimension)
+    store = FAISSVectorStore(dimension=embedder.dimension)
 
     store.add_documents(chunks, embeddings)
 
