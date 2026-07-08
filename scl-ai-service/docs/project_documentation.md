@@ -764,3 +764,269 @@ We will now build the AI reasoning layer that:
 
 ---
 
+
+---
+
+# 📘 SCL AI SERVICE — PROJECT DOCUMENTATION
+
+## Version: v0.7 (RAG + LLM + FastAPI Complete)
+
+---
+
+# 🧠 STEP 5: RETRIEVAL LAYER (RAG CORE SEARCH)
+
+## 🎯 Objective
+
+Build a system that retrieves the most relevant document chunks based on a user question using semantic search.
+
+---
+
+## 🧩 Features Added
+
+* Query embedding generation
+* Semantic search using FAISS
+* Top-K relevant chunk retrieval
+* Retriever abstraction layer
+
+---
+
+## 📁 New Module
+
+### `app/rag/retriever.py`
+
+Handles retrieval of relevant chunks from FAISS based on query similarity.
+
+---
+
+## ⚙️ Working Flow
+
+```text id="s5f1"
+User Question
+   ↓
+Embedding Generation
+   ↓
+FAISS Similarity Search
+   ↓
+Top-K Relevant Chunks
+```
+
+---
+
+## 🧠 Key Concept
+
+This step enables **semantic understanding**, meaning the system retrieves based on meaning rather than keywords.
+
+---
+
+## 🚀 Output
+
+Returns:
+
+* List of most relevant text chunks from the PDF
+
+---
+
+# 🤖 STEP 6: LLM INTEGRATION (ANSWER GENERATION)
+
+## 🎯 Objective
+
+Convert retrieved chunks into human-like answers using a Large Language Model (LLM).
+
+---
+
+## 🧩 Features Added
+
+* LLM integration using Ollama (free local model)
+* Context-aware prompt generation
+* Natural language answer generation
+
+---
+
+## 📁 New Module
+
+### `app/llm/generator.py`
+
+Responsible for generating AI responses using retrieved context.
+
+---
+
+## ⚙️ Working Flow
+
+```text id="s6f1"
+User Question
+   ↓
+Retriever (FAISS)
+   ↓
+Relevant Context
+   ↓
+LLM (Ollama / LLaMA / Mistral)
+   ↓
+Final Answer
+```
+
+---
+
+## 🧠 Key Concept
+
+This is the **generation layer of RAG**, where retrieved knowledge is transformed into readable answers.
+
+---
+
+## 🚀 Output
+
+Returns:
+
+* Natural language answer
+* Context-aware response based on PDF
+
+---
+
+## 🧪 Model Used
+
+* Ollama (local inference)
+* Recommended model: `llama3.1`
+
+---
+
+# 🌐 STEP 7: FASTAPI BACKEND (PRODUCTION API LAYER)
+
+## 🎯 Objective
+
+Expose the entire RAG pipeline as a REST API so it can be used by frontend or external systems.
+
+---
+
+## 🧩 Features Added
+
+* FastAPI backend server
+* PDF upload endpoint
+* Question answering endpoint
+* Health check endpoint
+* End-to-end pipeline integration
+
+---
+
+## 📁 New Module
+
+### `app/api/main.py`
+
+Main API server that connects all system components.
+
+---
+
+## 🌐 API ENDPOINTS
+
+### 1. Health Check
+
+```http id="s7e1"
+GET /health
+```
+
+Returns system status.
+
+---
+
+### 2. Upload PDF
+
+```http id="s7e2"
+POST /upload
+```
+
+Uploads PDF and processes full pipeline:
+
+* Extract text
+* Clean text
+* Chunk text
+* Generate embeddings
+* Store in FAISS
+
+---
+
+### 3. Ask Question
+
+```http id="s7e3"
+POST /ask
+```
+
+Request body:
+
+```json id="s7j1"
+{
+  "question": "What is machine learning?"
+}
+```
+
+Returns:
+
+* AI-generated answer
+* Retrieved context chunks
+
+---
+
+## ⚙️ System Flow
+
+```text id="s7f1"
+Client
+  ↓
+FastAPI Server
+  ↓
+RAG Pipeline
+  ↓
+FAISS Retrieval
+  ↓
+LLM Generation
+  ↓
+Response
+```
+
+---
+
+## 🧠 Key Concept
+
+This step converts the system into a **production-ready AI backend service**.
+
+---
+
+## 🚀 Output
+
+The system now behaves like:
+
+> ChatPDF / NotebookLM style API service
+
+---
+
+# 🏗️ FINAL ARCHITECTURE (STEP 5–7 COMBINED)
+
+```text id="final1"
+PDF Upload
+   ↓
+Text Extraction
+   ↓
+Cleaning
+   ↓
+Chunking
+   ↓
+Embeddings
+   ↓
+FAISS Vector DB
+   ↓
+Retriever (Semantic Search)
+   ↓
+LLM (Ollama)
+   ↓
+FastAPI Response
+```
+
+---
+
+# 🧠 OVERALL ACHIEVEMENT
+
+After Step 7, the system supports:
+
+✔ Document ingestion
+✔ Semantic search
+✔ AI-powered answers
+✔ REST API backend
+✔ End-to-end RAG pipeline
+
+
