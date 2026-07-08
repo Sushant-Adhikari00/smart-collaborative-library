@@ -28,6 +28,22 @@ public class DocumentController {
     @Value("${app.upload.dir:uploads/documents}")
     private String uploadDir;
 
+
+    private final DocumentService documentService;
+
+    // Reads from application.yml → app.upload.dir
+    @Value("${app.upload.dir:uploads/documents}")
+    private String uploadDir;
+
+    // ─────────────────────────────────────────────────────────────────
+    // UPLOAD
+    // Postman → Body → form-data:
+    //   file        [File] → select file
+    //   title       [Text] → Lecture 1
+    //   description [Text] → optional
+    //   categoryId  [Text] → 1
+    //   uploadedBy  [Text] → joh
+    // ─────────────────────────────────────────────────────────────────
     @PostMapping(value = "/upload", consumes = "multipart/form-data")
     public ResponseEntity<ApiResponse<?>> uploadDocument(
             @RequestParam("file") MultipartFile file,
@@ -48,6 +64,26 @@ public class DocumentController {
             : ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 
+
+        ApiResponse<?> response = documentService.uploadDocument(file, request);
+        return ResponseEntity.status(response.getStatusCode()).body(response);
+    }
+
+    // ─────────────────────────────────────────────────────────────────
+    // VIEW / DOWNLOAD ACTUAL FILE
+    // GET /api/v1/documents/files/{filename}
+    //
+    // How to use:
+    //   1. Call GET /api/v1/documents/{id} → copy "fileUrl" value
+    //      e.g. /files/8cf4d5a9-xxxx.pdf
+    //   2. Take the filename after /files/
+    //      e.g. 8cf4d5a9-xxxx.pdf
+    //   3. Open in browser:
+    //      http://localhost:8080/api/v1/documents/files/8cf4d5a9-xxxx.pdf
+    //
+    // {filename:.+} — the .+ regex allows dots in filename so Spring
+    // does not strip the file extension (.pdf, .docx etc.)
+    // ─────────────────────────────────────────────────────────────────
     @GetMapping("/files/{filename:.+}")
     public ResponseEntity<Resource> serveFile(@PathVariable String filename) {
         try {
@@ -65,6 +101,8 @@ public class DocumentController {
             String contentType = detectContentType(filename);
 
             return ResponseEntity.ok()
+                    // "inline"     → browser opens PDF/image directly
+                    // "attachment" → browser downloads the file
                     .header(HttpHeaders.CONTENT_DISPOSITION,
                             "inline; filename=\"" + filename + "\"")
                     .contentType(MediaType.parseMediaType(contentType))
@@ -91,6 +129,28 @@ public class DocumentController {
             : ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
     }
 
+    // ─────────────────────────────────────────────────────────────────
+    // GET METADATA BY ID — returns JSON, NOT the file bytes
+    // Use "fileUrl" from this response to build the /files/{filename} URL
+    // ─────────────────────────────────────────────────────────────────
+    @GetMapping("/{id}")
+    public ResponseEntity<ApiResponse<?>> getDocumentById(@PathVariable Long id) {
+        ApiResponse<?> response = documentService.getDocumentById(id);
+        return ResponseEntity.status(response.getStatusCode()).body(response);
+    }
+
+    // ─────────────────────────────────────────────────────────────────
+    // GET ALL DOCUMENTS — metadata list for dashboard/browse page
+    // ─────────────────────────────────────────────────────────────────
+    @GetMapping
+    public ResponseEntity<ApiResponse<?>> getAllDocuments() {
+        ApiResponse<?> response = documentService.getAllDocuments();
+        return ResponseEntity.status(response.getStatusCode()).body(response);
+    }
+
+    // ─────────────────────────────────────────────────────────────────
+    // GET BY UPLOADER
+    // ─────────────────────────────────────────────────────────────────
     @GetMapping("/uploaded-by/{uploadedBy}")
     public ResponseEntity<ApiResponse<?>> getDocumentsByUploadedBy(
             @PathVariable String uploadedBy) {
@@ -100,6 +160,12 @@ public class DocumentController {
             : ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
     }
 
+        return ResponseEntity.status(response.getStatusCode()).body(response);
+    }
+
+    // ─────────────────────────────────────────────────────────────────
+    // GET BY CATEGORY
+    // ─────────────────────────────────────────────────────────────────
     @GetMapping("/category/{categoryId}")
     public ResponseEntity<ApiResponse<?>> getDocumentsByCategory(
             @PathVariable Long categoryId) {
@@ -109,6 +175,13 @@ public class DocumentController {
             : ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
 
+        return ResponseEntity.status(response.getStatusCode()).body(response);
+    }
+
+    // ─────────────────────────────────────────────────────────────────
+    // UPDATE — Body → raw → JSON
+    // { "title": "New Title", "description": "...", "status": "ACTIVE" }
+    // ─────────────────────────────────────────────────────────────────
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<?>> updateDocument(
             @PathVariable Long id,
@@ -135,6 +208,22 @@ public class DocumentController {
             : ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 
+        return ResponseEntity.status(response.getStatusCode()).body(response);
+    }
+
+    // ─────────────────────────────────────────────────────────────────
+    // DELETE
+    // ─────────────────────────────────────────────────────────────────
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ApiResponse<?>> deleteDocument(@PathVariable Long id) {
+        ApiResponse<?> response = documentService.deleteDocument(id);
+        return ResponseEntity.status(response.getStatusCode()).body(response);
+    }
+
+    // ─────────────────────────────────────────────────────────────────
+    // PRIVATE HELPER — maps extension → MIME type
+    // Browser uses this to decide: open inline vs prompt download
+    // ─────────────────────────────────────────────────────────────────
     private String detectContentType(String filename) {
         String lower = filename.toLowerCase();
         if (lower.endsWith(".pdf"))  return "application/pdf";
@@ -149,4 +238,7 @@ public class DocumentController {
         if (lower.endsWith(".txt"))  return "text/plain";
         return "application/octet-stream";
     }
+        return "application/octet-stream"; // browser prompts download for unknown types
+    }
+
 }
