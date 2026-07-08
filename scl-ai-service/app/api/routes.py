@@ -100,6 +100,33 @@ async def process_file(file: UploadFile = File(...)):
         )
 
 
+class ProcessUrlRequest(BaseModel):
+    url: str
+
+@router.post("/ai/process-url")
+async def process_url(request: ProcessUrlRequest):
+    """
+    Process a file from a URL (e.g. Supabase public URL) through the full AI pipeline.
+    """
+    from app.main import document_service
+
+    try:
+        result = await document_service.process_url(request.url)
+
+        return {
+            "text": result["text"],
+            "summary": result["summary"],
+            "type": result["type"],
+            "chunks_count": result["chunks_count"],
+        }
+
+    except Exception as e:
+        logger.error(f"URL processing failed: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=500,
+            detail=f"Processing failed: {str(e)}",
+        )
+
 @router.post("/ai/chat", response_model=ChatResponse)
 async def chat(request: ChatRequest):
     """
