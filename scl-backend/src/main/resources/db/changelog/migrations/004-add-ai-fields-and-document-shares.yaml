@@ -1,0 +1,55 @@
+databaseChangeLog:
+  - changeSet:
+      id: add-ai-fields-to-documents
+      author: ai-agent
+      changes:
+        - addColumn:
+            tableName: documents
+            columns:
+              - column:
+                  name: ai_summary
+                  type: text
+              - column:
+                  name: extracted_text
+                  type: text
+              - column:
+                  name: chunks_count
+                  type: int
+
+  - changeSet:
+      id: create-document-shares-table
+      author: ai-agent
+      changes:
+        - createTable:
+            tableName: document_shares
+            columns:
+              - column:
+                  name: id
+                  type: bigserial
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: document_id
+                  type: int
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_doc_shares_document
+                    references: documents(id)
+              - column:
+                  name: shared_with_user_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_doc_shares_user
+                    references: users(id)
+              - column:
+                  name: permission
+                  type: varchar(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: shared_at
+                  type: timestamp
+                  defaultValueComputed: CURRENT_TIMESTAMP

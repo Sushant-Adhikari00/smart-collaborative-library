@@ -1,11 +1,32 @@
 package com.scl.modules.document.controller;
 
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import com.scl.common.ApiResponse;
+import com.scl.modules.document.dto.DocumentUpdateRequest;
+import com.scl.modules.document.dto.DocumentUploadRequest;
+import com.scl.modules.document.service.DocumentService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 @RestController
 @RequestMapping("/api/v1/documents")
+@RequiredArgsConstructor
 public class DocumentController {
+
+    private final DocumentService documentService;
+
+    @Value("${app.upload.dir:uploads/documents}")
+    private String uploadDir;
 
 
     private final DocumentService documentService;
@@ -36,6 +57,12 @@ public class DocumentController {
         request.setDescription(description);
         request.setCategoryId(categoryId);
         request.setUploadedBy(uploadedBy);
+
+        ApiResponse<?> response = documentService.uploadDocument(file, request);
+        return response.isSuccess() 
+            ? ResponseEntity.status(HttpStatus.CREATED).body(response) 
+            : ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
 
 
         ApiResponse<?> response = documentService.uploadDocument(file, request);
@@ -86,6 +113,22 @@ public class DocumentController {
         }
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<ApiResponse<?>> getDocumentById(@PathVariable Long id) {
+        ApiResponse<?> response = documentService.getDocumentById(id);
+        return response.isSuccess() 
+            ? ResponseEntity.ok(response) 
+            : ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+    }
+
+    @GetMapping
+    public ResponseEntity<ApiResponse<?>> getAllDocuments() {
+        ApiResponse<?> response = documentService.getAllDocuments();
+        return response.isSuccess() 
+            ? ResponseEntity.ok(response) 
+            : ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+    }
+
     // ─────────────────────────────────────────────────────────────────
     // GET METADATA BY ID — returns JSON, NOT the file bytes
     // Use "fileUrl" from this response to build the /files/{filename} URL
@@ -112,6 +155,11 @@ public class DocumentController {
     public ResponseEntity<ApiResponse<?>> getDocumentsByUploadedBy(
             @PathVariable String uploadedBy) {
         ApiResponse<?> response = documentService.getDocumentsByUploadedBy(uploadedBy);
+        return response.isSuccess() 
+            ? ResponseEntity.ok(response) 
+            : ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+    }
+
         return ResponseEntity.status(response.getStatusCode()).body(response);
     }
 
@@ -122,6 +170,11 @@ public class DocumentController {
     public ResponseEntity<ApiResponse<?>> getDocumentsByCategory(
             @PathVariable Long categoryId) {
         ApiResponse<?> response = documentService.getDocumentsByCategory(categoryId);
+        return response.isSuccess() 
+            ? ResponseEntity.ok(response) 
+            : ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+    }
+
         return ResponseEntity.status(response.getStatusCode()).body(response);
     }
 
@@ -134,6 +187,27 @@ public class DocumentController {
             @PathVariable Long id,
             @RequestBody DocumentUpdateRequest request) {
         ApiResponse<?> response = documentService.updateDocument(id, request);
+        return response.isSuccess() 
+            ? ResponseEntity.ok(response) 
+            : ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ApiResponse<?>> deleteDocument(@PathVariable Long id) {
+        ApiResponse<?> response = documentService.deleteDocument(id);
+        return response.isSuccess() 
+            ? ResponseEntity.ok(response) 
+            : ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+    }
+
+    @PostMapping("/share")
+    public ResponseEntity<ApiResponse<?>> shareDocument(@RequestBody @jakarta.validation.Valid com.scl.modules.document.dto.DocumentShareRequest request) {
+        ApiResponse<?> response = documentService.shareDocument(request);
+        return response.isSuccess()
+            ? ResponseEntity.ok(response)
+            : ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+
         return ResponseEntity.status(response.getStatusCode()).body(response);
     }
 
@@ -162,6 +236,8 @@ public class DocumentController {
         if (lower.endsWith(".csv"))  return "text/csv";
         if (lower.endsWith(".mp4"))  return "video/mp4";
         if (lower.endsWith(".txt"))  return "text/plain";
+        return "application/octet-stream";
+    }
         return "application/octet-stream"; // browser prompts download for unknown types
     }
 
