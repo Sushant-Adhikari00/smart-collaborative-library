@@ -1,7 +1,7 @@
 package com.scl.modules.document.dto;
 
-import com.drew.lang.annotations.NotNull;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 @Data
@@ -11,7 +11,7 @@ public class DocumentUploadRequest {
 
     private String description;
 
-    @NotNull()
+    @NotNull(message = "CategoryId is required")
     private Long categoryId;
 
     private String uploadedBy;

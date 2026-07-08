@@ -41,3 +41,12 @@ supabase:
   url: ${SUPABASE_URL}
   key: ${SUPABASE_KEY}
   bucket: Porject_files
+
+ai-service:
+  url: ${AI_SERVICE_URL:http://localhost:8000}
+
+jwt:
+  # The secret key for signing JWTs. This should be a long, random string in production!
+  secret: ${JWT_SECRET}
+  accessTokenExpiration: 900000     # 15 mins (in milliseconds)
+  refreshTokenExpiration: 604800000 # 7 days (in milliseconds)

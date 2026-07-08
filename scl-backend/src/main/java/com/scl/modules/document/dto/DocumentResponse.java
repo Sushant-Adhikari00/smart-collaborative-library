@@ -18,4 +18,9 @@ public class DocumentResponse {
     private String uploadedBy;
     private String categoryName;
     private String status;
+    
+    // --- AI Fields ---
+    private String aiSummary;
+    private String extractedText;
+    private Integer chunksCount;
 }

@@ -5,3 +5,5 @@ databaseChangeLog:
       file: db/changelog/migrations/002-create-document-table.yaml
   - include:
       file: db/changelog/migrations/003-create-users-and-audit-logs.yaml
+  - include:
+      file: db/changelog/migrations/004-add-ai-fields-and-document-shares.yaml
