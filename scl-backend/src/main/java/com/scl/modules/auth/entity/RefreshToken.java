@@ -1,10 +1,13 @@
-package com.scl.audit.entity;
+package com.scl.modules.auth.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -19,33 +22,22 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "audit_logs")
-public class AuditLog {
+@Table(name = "refresh_tokens")
+public class RefreshToken {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "user_id")
-    private Long userId;
+    @Column(name = "token_hash", nullable = false, unique = true)
+    private String tokenHash;
 
-    @Column(nullable = false)
-    private String action;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
-    @Column(name = "resource_type")
-    private String resourceType;
-
-    @Column(name = "resource_id")
-    private String resourceId;
-
-    @Column(name = "ip_address", length = 45)
-    private String ipAddress;
-
-    @Column(name = "user_agent", length = 1000)
-    private String userAgent;
-
-    @Column(columnDefinition = "TEXT")
-    private String details;
+    @Column(name = "expires_at", nullable = false)
+    private LocalDateTime expiresAt;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)

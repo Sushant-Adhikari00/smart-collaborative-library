@@ -8,6 +8,7 @@ from app.processors.csv_processor import process_csv
 from app.processors.xlsx import process_xlsx
 from app.processors.image import process_image
 from app.processors.video import process_video
+from app.processors.audio import process_audio
 
 logger = logging.getLogger(__name__)
 
@@ -27,12 +28,18 @@ EXTENSION_MAP = {
     ".mp4": process_video,
     ".mov": process_video,
     ".avi": process_video,
+    # Audio (voice transcription)
+    ".mp3": process_audio,
+    ".wav": process_audio,
+    ".ogg": process_audio,
+    ".m4a": process_audio,
 }
 
 # Categorize extensions for response type
 DOCUMENT_EXTENSIONS = {".pdf", ".docx", ".txt", ".csv", ".xlsx"}
 IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg"}
 VIDEO_EXTENSIONS = {".mp4", ".mov", ".avi"}
+AUDIO_EXTENSIONS = {".mp3", ".wav", ".ogg", ".m4a"}
 
 SUPPORTED_EXTENSIONS = set(EXTENSION_MAP.keys())
 
@@ -46,6 +53,8 @@ def get_file_type_category(extension: str) -> str:
         return "image"
     elif ext in VIDEO_EXTENSIONS:
         return "video"
+    elif ext in AUDIO_EXTENSIONS:
+        return "audio"
     return "unknown"
 
 
