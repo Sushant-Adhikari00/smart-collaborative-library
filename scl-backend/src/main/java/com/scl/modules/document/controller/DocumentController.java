@@ -35,7 +35,7 @@ public class DocumentController {
     //   title       [Text] → Lecture 1
     //   description [Text] → optional
     //   categoryId  [Text] → 1
-    //   uploadedBy  [Text] → john
+    //   uploadedBy  [Text] → joh
     // ─────────────────────────────────────────────────────────────────
     @PostMapping(value = "/upload", consumes = "multipart/form-data")
     public ResponseEntity<ApiResponse<?>> uploadDocument(
@@ -50,6 +50,7 @@ public class DocumentController {
         request.setDescription(description);
         request.setCategoryId(categoryId);
         request.setUploadedBy(uploadedBy);
+
 
         ApiResponse<?> response = documentService.uploadDocument(file, request);
         return ResponseEntity.status(response.getStatusCode()).body(response);
