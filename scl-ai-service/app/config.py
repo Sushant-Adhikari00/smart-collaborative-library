@@ -4,9 +4,13 @@ from pydantic_settings import BaseSettings
 class Settings(BaseSettings):
     """Application configuration loaded from environment variables."""
 
-    # Ollama LLM
+    # Ollama LLM (local fallback)
     OLLAMA_BASE_URL: str = "http://localhost:11434"
     OLLAMA_MODEL: str = "llama3.1"
+
+    # Groq API (cloud, preferred)
+    GROQ_API_KEY: str = ""
+    GROQ_MODEL: str = "llama-3.1-8b-instant"
 
     # Embedding model
     EMBEDDING_MODEL: str = "all-MiniLM-L6-v2"

@@ -64,10 +64,12 @@ async def lifespan(app: FastAPI):
         embedding_service=embedding_service,
     )
 
-    # 4. Initialize LLM generator
+    # 4. Initialize LLM generator (uses Groq if GROQ_API_KEY is set, else Ollama)
     llm_generator = LLMGenerator(
-        base_url=settings.OLLAMA_BASE_URL,
-        model=settings.OLLAMA_MODEL,
+        groq_api_key=settings.GROQ_API_KEY,
+        groq_model=settings.GROQ_MODEL,
+        ollama_base_url=settings.OLLAMA_BASE_URL,
+        ollama_model=settings.OLLAMA_MODEL,
         timeout=settings.LLM_TIMEOUT,
     )
 

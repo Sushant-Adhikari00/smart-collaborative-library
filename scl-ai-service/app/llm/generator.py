@@ -1,22 +1,42 @@
-import requests
 import logging
+import requests
 
 logger = logging.getLogger(__name__)
 
 
 class LLMGenerator:
-    """Generates answers and summaries using the Ollama LLM API."""
+    """
+    Generates answers and summaries using either:
+      - Groq API (cloud, free) when GROQ_API_KEY is set  ← preferred
+      - Ollama (local) as fallback when no API key is provided
+    """
 
     def __init__(
         self,
-        base_url: str = "http://localhost:11434",
-        model: str = "llama3.1",
-        timeout: int = 120,
+        groq_api_key: str = "",
+        groq_model: str = "llama-3.1-8b-instant",
+        ollama_base_url: str = "http://localhost:11434",
+        ollama_model: str = "llama3.1",
+        timeout: int = 60,
     ):
-        self.model = model
-        self.url = f"{base_url}/api/generate"
         self.timeout = timeout
-        logger.info(f"LLM Generator initialized (model={model}, url={self.url})")
+        self.groq_api_key = groq_api_key
+
+        if groq_api_key:
+            # Use Groq cloud API
+            self._backend = "groq"
+            self.model = groq_model
+            self.url = "https://api.groq.com/openai/v1/chat/completions"
+            logger.info(f"LLM Generator using Groq API (model={groq_model})")
+        else:
+            # Fall back to local Ollama
+            self._backend = "ollama"
+            self.model = ollama_model
+            self.url = f"{ollama_base_url}/api/generate"
+            logger.warning(
+                "GROQ_API_KEY not set — falling back to local Ollama. "
+                "Chat will fail if Ollama is not running locally."
+            )
 
     def generate(self, question: str, context: str) -> str:
         """Generate an answer to a question using retrieved context."""
@@ -28,7 +48,7 @@ class LLMGenerator:
             f"Question:\n{question}\n\n"
             "Answer clearly and accurately:"
         )
-        return self._call_ollama(prompt)
+        return self._call_llm(prompt)
 
     def summarize(self, text: str) -> dict:
         """
@@ -53,19 +73,56 @@ class LLMGenerator:
             f"Content:\n{truncated}"
         )
 
-        raw = self._call_ollama(prompt)
+        raw = self._call_llm(prompt)
         return self._parse_summary_response(raw)
 
-    def _call_ollama(self, prompt: str) -> str:
-        """Make a request to the Ollama API."""
+    def _call_llm(self, prompt: str) -> str:
+        """Route to the correct backend — Groq or Ollama."""
+        if self._backend == "groq":
+            return self._call_groq(prompt)
+        return self._call_ollama(prompt)
+
+    def _call_groq(self, prompt: str) -> str:
+        """Call the Groq cloud API (OpenAI-compatible format)."""
         try:
             response = requests.post(
                 self.url,
+                headers={
+                    "Authorization": f"Bearer {self.groq_api_key}",
+                    "Content-Type": "application/json",
+                },
                 json={
                     "model": self.model,
-                    "prompt": prompt,
-                    "stream": False,
+                    "messages": [{"role": "user", "content": prompt}],
+                    "temperature": 0.3,
+                    "max_tokens": 1024,
                 },
+                timeout=self.timeout,
+            )
+            response.raise_for_status()
+            return response.json()["choices"][0]["message"]["content"]
+
+        except requests.exceptions.ConnectionError:
+            logger.error("Cannot connect to Groq API")
+            raise ConnectionError(
+                "Cannot reach Groq API. Check your internet connection."
+            )
+        except requests.exceptions.Timeout:
+            logger.error(f"Groq API timed out after {self.timeout}s")
+            raise TimeoutError(f"LLM request timed out after {self.timeout} seconds")
+        except requests.exceptions.HTTPError as e:
+            logger.error(f"Groq API HTTP error: {e.response.status_code} — {e.response.text}")
+            raise
+        except Exception as e:
+            logger.error(f"Groq LLM call failed: {e}")
+            raise
+
+    def _call_ollama(self, prompt: str) -> str:
+        """Call the local Ollama API."""
+        try:
+            response = requests.post(
+                self.url,
+                json={"model": self.model, "prompt": prompt, "stream": False},
                 timeout=self.timeout,
             )
             response.raise_for_status()
@@ -75,15 +132,13 @@ class LLMGenerator:
             logger.error(f"Cannot connect to Ollama at {self.url}")
             raise ConnectionError(
                 f"Ollama is not reachable at {self.url}. "
-                "Please ensure Ollama is running with: ollama serve"
+                "Either set GROQ_API_KEY in .env or run: ollama serve"
             )
         except requests.exceptions.Timeout:
-            logger.error(f"Ollama request timed out after {self.timeout}s")
-            raise TimeoutError(
-                f"LLM request timed out after {self.timeout} seconds"
-            )
+            logger.error(f"Ollama timed out after {self.timeout}s")
+            raise TimeoutError(f"LLM request timed out after {self.timeout} seconds")
         except Exception as e:
-            logger.error(f"LLM generation failed: {e}")
+            logger.error(f"Ollama LLM call failed: {e}")
             raise
 
     def _parse_summary_response(self, raw: str) -> dict:
