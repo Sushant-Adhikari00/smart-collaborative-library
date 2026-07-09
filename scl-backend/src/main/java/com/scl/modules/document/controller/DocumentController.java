@@ -1,6 +1,7 @@
 package com.scl.modules.document.controller;
 
 import com.scl.common.ApiResponse;
+import com.scl.modules.document.dto.DocumentShareRequest;
 import com.scl.modules.document.dto.DocumentUpdateRequest;
 import com.scl.modules.document.dto.DocumentUploadRequest;
 import com.scl.modules.document.service.DocumentService;
@@ -12,7 +13,15 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.nio.file.Path;
@@ -28,22 +37,6 @@ public class DocumentController {
     @Value("${app.upload.dir:uploads/documents}")
     private String uploadDir;
 
-
-    private final DocumentService documentService;
-
-    // Reads from application.yml → app.upload.dir
-    @Value("${app.upload.dir:uploads/documents}")
-    private String uploadDir;
-
-    // ─────────────────────────────────────────────────────────────────
-    // UPLOAD
-    // Postman → Body → form-data:
-    //   file        [File] → select file
-    //   title       [Text] → Lecture 1
-    //   description [Text] → optional
-    //   categoryId  [Text] → 1
-    //   uploadedBy  [Text] → joh
-    // ─────────────────────────────────────────────────────────────────
     @PostMapping(value = "/upload", consumes = "multipart/form-data")
     public ResponseEntity<ApiResponse<?>> uploadDocument(
             @RequestParam("file") MultipartFile file,
@@ -59,31 +52,11 @@ public class DocumentController {
         request.setUploadedBy(uploadedBy);
 
         ApiResponse<?> response = documentService.uploadDocument(file, request);
-        return response.isSuccess() 
-            ? ResponseEntity.status(HttpStatus.CREATED).body(response) 
-            : ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        return response.isSuccess()
+                ? ResponseEntity.status(HttpStatus.CREATED).body(response)
+                : ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 
-
-        ApiResponse<?> response = documentService.uploadDocument(file, request);
-        return ResponseEntity.status(response.getStatusCode()).body(response);
-    }
-
-    // ─────────────────────────────────────────────────────────────────
-    // VIEW / DOWNLOAD ACTUAL FILE
-    // GET /api/v1/documents/files/{filename}
-    //
-    // How to use:
-    //   1. Call GET /api/v1/documents/{id} → copy "fileUrl" value
-    //      e.g. /files/8cf4d5a9-xxxx.pdf
-    //   2. Take the filename after /files/
-    //      e.g. 8cf4d5a9-xxxx.pdf
-    //   3. Open in browser:
-    //      http://localhost:8080/api/v1/documents/files/8cf4d5a9-xxxx.pdf
-    //
-    // {filename:.+} — the .+ regex allows dots in filename so Spring
-    // does not strip the file extension (.pdf, .docx etc.)
-    // ─────────────────────────────────────────────────────────────────
     @GetMapping("/files/{filename:.+}")
     public ResponseEntity<Resource> serveFile(@PathVariable String filename) {
         try {
@@ -101,13 +74,9 @@ public class DocumentController {
             String contentType = detectContentType(filename);
 
             return ResponseEntity.ok()
-                    // "inline"     → browser opens PDF/image directly
-                    // "attachment" → browser downloads the file
-                    .header(HttpHeaders.CONTENT_DISPOSITION,
-                            "inline; filename=\"" + filename + "\"")
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + filename + "\"")
                     .contentType(MediaType.parseMediaType(contentType))
                     .body(resource);
-
         } catch (Exception e) {
             return ResponseEntity.internalServerError().build();
         }
@@ -116,129 +85,73 @@ public class DocumentController {
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<?>> getDocumentById(@PathVariable Long id) {
         ApiResponse<?> response = documentService.getDocumentById(id);
-        return response.isSuccess() 
-            ? ResponseEntity.ok(response) 
-            : ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        return response.isSuccess()
+                ? ResponseEntity.ok(response)
+                : ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
 
     @GetMapping
     public ResponseEntity<ApiResponse<?>> getAllDocuments() {
         ApiResponse<?> response = documentService.getAllDocuments();
-        return response.isSuccess() 
-            ? ResponseEntity.ok(response) 
-            : ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        return response.isSuccess()
+                ? ResponseEntity.ok(response)
+                : ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
     }
 
-    // ─────────────────────────────────────────────────────────────────
-    // GET METADATA BY ID — returns JSON, NOT the file bytes
-    // Use "fileUrl" from this response to build the /files/{filename} URL
-    // ─────────────────────────────────────────────────────────────────
-    @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<?>> getDocumentById(@PathVariable Long id) {
-        ApiResponse<?> response = documentService.getDocumentById(id);
-        return ResponseEntity.status(response.getStatusCode()).body(response);
-    }
-
-    // ─────────────────────────────────────────────────────────────────
-    // GET ALL DOCUMENTS — metadata list for dashboard/browse page
-    // ─────────────────────────────────────────────────────────────────
-    @GetMapping
-    public ResponseEntity<ApiResponse<?>> getAllDocuments() {
-        ApiResponse<?> response = documentService.getAllDocuments();
-        return ResponseEntity.status(response.getStatusCode()).body(response);
-    }
-
-    // ─────────────────────────────────────────────────────────────────
-    // GET BY UPLOADER
-    // ─────────────────────────────────────────────────────────────────
     @GetMapping("/uploaded-by/{uploadedBy}")
-    public ResponseEntity<ApiResponse<?>> getDocumentsByUploadedBy(
-            @PathVariable String uploadedBy) {
+    public ResponseEntity<ApiResponse<?>> getDocumentsByUploadedBy(@PathVariable String uploadedBy) {
         ApiResponse<?> response = documentService.getDocumentsByUploadedBy(uploadedBy);
-        return response.isSuccess() 
-            ? ResponseEntity.ok(response) 
-            : ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        return response.isSuccess()
+                ? ResponseEntity.ok(response)
+                : ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
     }
 
-        return ResponseEntity.status(response.getStatusCode()).body(response);
-    }
-
-    // ─────────────────────────────────────────────────────────────────
-    // GET BY CATEGORY
-    // ─────────────────────────────────────────────────────────────────
     @GetMapping("/category/{categoryId}")
-    public ResponseEntity<ApiResponse<?>> getDocumentsByCategory(
-            @PathVariable Long categoryId) {
+    public ResponseEntity<ApiResponse<?>> getDocumentsByCategory(@PathVariable Long categoryId) {
         ApiResponse<?> response = documentService.getDocumentsByCategory(categoryId);
-        return response.isSuccess() 
-            ? ResponseEntity.ok(response) 
-            : ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        return response.isSuccess()
+                ? ResponseEntity.ok(response)
+                : ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
 
-        return ResponseEntity.status(response.getStatusCode()).body(response);
-    }
-
-    // ─────────────────────────────────────────────────────────────────
-    // UPDATE — Body → raw → JSON
-    // { "title": "New Title", "description": "...", "status": "ACTIVE" }
-    // ─────────────────────────────────────────────────────────────────
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<?>> updateDocument(
             @PathVariable Long id,
             @RequestBody DocumentUpdateRequest request) {
         ApiResponse<?> response = documentService.updateDocument(id, request);
-        return response.isSuccess() 
-            ? ResponseEntity.ok(response) 
-            : ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        return response.isSuccess()
+                ? ResponseEntity.ok(response)
+                : ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<?>> deleteDocument(@PathVariable Long id) {
         ApiResponse<?> response = documentService.deleteDocument(id);
-        return response.isSuccess() 
-            ? ResponseEntity.ok(response) 
-            : ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        return response.isSuccess()
+                ? ResponseEntity.ok(response)
+                : ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
 
     @PostMapping("/share")
-    public ResponseEntity<ApiResponse<?>> shareDocument(@RequestBody @jakarta.validation.Valid com.scl.modules.document.dto.DocumentShareRequest request) {
+    public ResponseEntity<ApiResponse<?>> shareDocument(@RequestBody @jakarta.validation.Valid DocumentShareRequest request) {
         ApiResponse<?> response = documentService.shareDocument(request);
         return response.isSuccess()
-            ? ResponseEntity.ok(response)
-            : ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+                ? ResponseEntity.ok(response)
+                : ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 
-        return ResponseEntity.status(response.getStatusCode()).body(response);
-    }
-
-    // ─────────────────────────────────────────────────────────────────
-    // DELETE
-    // ─────────────────────────────────────────────────────────────────
-    @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<?>> deleteDocument(@PathVariable Long id) {
-        ApiResponse<?> response = documentService.deleteDocument(id);
-        return ResponseEntity.status(response.getStatusCode()).body(response);
-    }
-
-    // ─────────────────────────────────────────────────────────────────
-    // PRIVATE HELPER — maps extension → MIME type
-    // Browser uses this to decide: open inline vs prompt download
-    // ─────────────────────────────────────────────────────────────────
     private String detectContentType(String filename) {
         String lower = filename.toLowerCase();
-        if (lower.endsWith(".pdf"))  return "application/pdf";
-        if (lower.endsWith(".png"))  return "image/png";
+        if (lower.endsWith(".pdf")) return "application/pdf";
+        if (lower.endsWith(".png")) return "image/png";
         if (lower.endsWith(".jpg") || lower.endsWith(".jpeg")) return "image/jpeg";
         if (lower.endsWith(".docx")) return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
-        if (lower.endsWith(".doc"))  return "application/msword";
+        if (lower.endsWith(".doc")) return "application/msword";
         if (lower.endsWith(".xlsx")) return "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
-        if (lower.endsWith(".xls"))  return "application/vnd.ms-excel";
-        if (lower.endsWith(".csv"))  return "text/csv";
-        if (lower.endsWith(".mp4"))  return "video/mp4";
-        if (lower.endsWith(".txt"))  return "text/plain";
+        if (lower.endsWith(".xls")) return "application/vnd.ms-excel";
+        if (lower.endsWith(".csv")) return "text/csv";
+        if (lower.endsWith(".mp4")) return "video/mp4";
+        if (lower.endsWith(".txt")) return "text/plain";
         return "application/octet-stream";
     }
-        return "application/octet-stream"; // browser prompts download for unknown types
-    }
-
 }
