@@ -5,7 +5,6 @@ import lombok.Data;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import javax.swing.event.DocumentListener;
 import java.time.LocalDateTime;
 
 @Data
@@ -50,4 +49,13 @@ public class Document {
     @Column(nullable = false, length = 50)
     private DocumentStatus status;
 
+    // --- AI Fields ---
+    @Column(name = "ai_summary", columnDefinition = "TEXT")
+    private String aiSummary;
+
+    @Column(name = "extracted_text", columnDefinition = "TEXT")
+    private String extractedText;
+
+    @Column(name = "chunks_count")
+    private Integer chunksCount;
 }
