@@ -26,9 +26,14 @@ class Settings(BaseSettings):
     # LLM
     LLM_TIMEOUT: int = 120
 
+    # Supabase (optional vector store)
+    SUPABASE_URL: str = ""
+    SUPABASE_KEY: str = ""
+
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"
+        extra = "ignore"
 
 
 settings = Settings()
