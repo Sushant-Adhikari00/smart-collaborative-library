@@ -64,13 +64,7 @@ public class DocumentServiceImpl implements DocumentService {
 
             String fileUrl = supabaseStorageUtil.storeFile(file);
 
-            AiProcessResponse aiResponse = null;
-            try {
-                aiResponse = aiServiceClient.processDocumentByUrl(fileUrl);
-            } catch (Exception e) {
-                logger.error("AI Service processing failed: {}", e.getMessage());
-            }
-
+            // 1. Create and save Document first to get the database ID
             Document document = new Document();
             document.setTitle(request.getTitle());
             document.setDescription(request.getDescription());
@@ -82,13 +76,24 @@ public class DocumentServiceImpl implements DocumentService {
             document.setCategory(category);
             document.setStatus(DocumentStatus.ACTIVE);
             
-            if (aiResponse != null) {
-                document.setAiSummary(aiResponse.getSummary());
-                document.setExtractedText(aiResponse.getText());
-                document.setChunksCount(aiResponse.getChunks_count());
+            Document saved = documentRepository.save(document);
+
+            // 2. Pass the saved Document ID to the AI service
+            AiProcessResponse aiResponse = null;
+            try {
+                aiResponse = aiServiceClient.processDocumentByUrl(fileUrl, saved.getId().toString());
+            } catch (Exception e) {
+                logger.error("AI Service processing failed: {}", e.getMessage());
             }
 
-            Document saved = documentRepository.save(document);
+            // 3. Update the document with AI results if successful
+            if (aiResponse != null) {
+                saved.setAiSummary(aiResponse.getSummary());
+                saved.setExtractedText(aiResponse.getText());
+                saved.setChunksCount(aiResponse.getChunks_count());
+                saved = documentRepository.save(saved);
+            }
+
             logger.info("Document uploaded successfully: id={}, fileName={}", saved.getId(), saved.getFileName());
 
             return ApiResponse.success("Document uploaded successfully", mapToResponse(saved));

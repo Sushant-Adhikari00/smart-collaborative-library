@@ -34,12 +34,13 @@ class DocumentService:
         # Ensure upload directory exists
         os.makedirs(self.upload_dir, exist_ok=True)
 
-    async def process_upload(self, file) -> dict:
+    async def process_upload(self, file, document_id: str) -> dict:
         """
         Process an uploaded file through the full pipeline.
 
         Args:
             file: FastAPI UploadFile object.
+            document_id: Unique identifier for the document to scope FAISS index.
 
         Returns:
             dict with keys: text, summary, type, chunks_count
@@ -78,9 +79,9 @@ class DocumentService:
             logger.info(f"Generated {len(embeddings)} embeddings")
 
             # 7. Store in FAISS
-            self.vector_store.add_documents(chunks, embeddings)
+            self.vector_store.add_documents(chunks, embeddings, document_id)
             logger.info(
-                f"Stored in FAISS (total documents: {self.vector_store.document_count})"
+                f"Stored in FAISS index for document {document_id}"
             )
 
             # 8. Generate summary via LLM
@@ -106,7 +107,7 @@ class DocumentService:
                 except OSError:
                     pass
 
-    async def process_url(self, file_url: str) -> dict:
+    async def process_url(self, file_url: str, document_id: str) -> dict:
         """
         Process a file directly from a URL (e.g. Supabase public URL).
 
@@ -192,9 +193,9 @@ class DocumentService:
             logger.info(f"Generated {len(embeddings)} embeddings")
 
             # 7. Store in FAISS
-            self.vector_store.add_documents(chunks, embeddings)
+            self.vector_store.add_documents(chunks, embeddings, document_id)
             logger.info(
-                f"Stored in FAISS (total documents: {self.vector_store.document_count})"
+                f"Stored in FAISS index for document {document_id}"
             )
 
             # 8. Generate summary via LLM

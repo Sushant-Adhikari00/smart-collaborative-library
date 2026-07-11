@@ -23,19 +23,23 @@ public class AiServiceClient {
         this.aiWebClient = aiWebClient;
     }
 
-    public AiProcessResponse processDocumentByUrl(String fileUrl) {
+    public AiProcessResponse processDocumentByUrl(String fileUrl, String documentId) {
         return aiWebClient.post()
                 .uri("/ai/process-url")
                 .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(java.util.Map.of("url", fileUrl))
+                .bodyValue(java.util.Map.of(
+                    "url", fileUrl,
+                    "document_id", documentId
+                ))
                 .retrieve()
                 .bodyToMono(AiProcessResponse.class)
                 .block(); // Blocking because we are calling from standard synchronous Spring MVC
     }
 
-    public AiChatResponse chat(String question) {
+    public AiChatResponse chat(String question, String documentId) {
         AiChatRequest request = new AiChatRequest();
         request.setQuestion(question);
+        request.setDocumentId(documentId);
 
         return aiWebClient.post()
                 .uri("/ai/chat")
