@@ -1,6 +1,6 @@
 import os
 import logging
-from fastapi import APIRouter, UploadFile, File, HTTPException
+from fastapi import APIRouter, UploadFile, File, HTTPException, Form
 from pydantic import BaseModel
 
 from app.services.file_router import SUPPORTED_EXTENSIONS
@@ -15,6 +15,7 @@ router = APIRouter()
 
 class ChatRequest(BaseModel):
     question: str
+    document_id: str
 
 
 class ChatResponse(BaseModel):
@@ -44,7 +45,7 @@ async def health_check():
 
 
 @router.post("/ai/process")
-async def process_file(file: UploadFile = File(...)):
+async def process_file(file: UploadFile = File(...), document_id: str = Form(...)):
     """
     Process an uploaded file through the full AI pipeline.
 
@@ -81,7 +82,7 @@ async def process_file(file: UploadFile = File(...)):
     await file.seek(0)
 
     try:
-        result = await document_service.process_upload(file)
+        result = await document_service.process_upload(file, document_id)
 
         return {
             "text": result["text"],
@@ -102,6 +103,7 @@ async def process_file(file: UploadFile = File(...)):
 
 class ProcessUrlRequest(BaseModel):
     url: str
+    document_id: str
 
 @router.post("/ai/process-url")
 async def process_url(request: ProcessUrlRequest):
@@ -111,7 +113,7 @@ async def process_url(request: ProcessUrlRequest):
     from app.main import document_service
 
     try:
-        result = await document_service.process_url(request.url)
+        result = await document_service.process_url(request.url, request.document_id)
 
         return {
             "text": result["text"],
@@ -145,6 +147,7 @@ async def chat(request: ChatRequest):
         # Retrieve relevant chunks
         chunks = retriever.retrieve(
             request.question,
+            request.document_id,
             top_k=settings.FAISS_TOP_K,
         )
 

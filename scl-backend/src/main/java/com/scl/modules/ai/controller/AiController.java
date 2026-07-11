@@ -28,7 +28,7 @@ public class AiController {
     @Operation(summary = "Chat with AI (RAG)", description = "Ask a question about documents that have been uploaded and indexed.")
     @PostMapping("/chat")
     public ResponseEntity<AiChatResponse> chat(@RequestBody AiChatRequest request) {
-        AiChatResponse response = aiServiceClient.chat(request.getQuestion());
+        AiChatResponse response = aiServiceClient.chat(request.getQuestion(), request.getDocumentId());
         return ResponseEntity.ok(response);
     }
 
@@ -43,7 +43,7 @@ public class AiController {
     )
     @PostMapping("/process-url")
     public ResponseEntity<AiProcessResponse> processUrl(@RequestBody AiProcessUrlRequest request) {
-        AiProcessResponse response = aiServiceClient.processDocumentByUrl(request.getFileUrl());
+        AiProcessResponse response = aiServiceClient.processDocumentByUrl(request.getFileUrl(), request.getDocumentId());
         return ResponseEntity.ok(response);
     }
 }

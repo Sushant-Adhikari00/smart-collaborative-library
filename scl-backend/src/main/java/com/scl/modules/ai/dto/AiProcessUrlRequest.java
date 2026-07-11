@@ -6,4 +6,7 @@ import lombok.Data;
 public class AiProcessUrlRequest {
     /** Supabase public (or signed) URL of the file to process and index into FAISS. */
     private String fileUrl;
+    
+    /** The unique ID of the document to scope the FAISS index to. */
+    private String documentId;
 }
