@@ -37,14 +37,13 @@ public class AiServiceClient {
     }
 
     public AiChatResponse chat(String question, String documentId) {
-        AiChatRequest request = new AiChatRequest();
-        request.setQuestion(question);
-        request.setDocumentId(documentId);
-
         return aiWebClient.post()
                 .uri("/ai/chat")
                 .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(request)
+                .bodyValue(java.util.Map.of(
+                    "question", question,
+                    "document_id", documentId
+                ))
                 .retrieve()
                 .bodyToMono(AiChatResponse.class)
                 .block();
