@@ -109,28 +109,55 @@ class DocumentService:
     async def process_url(self, file_url: str) -> dict:
         """
         Process a file directly from a URL (e.g. Supabase public URL).
+
+        Handles both public and private Supabase storage buckets by attaching
+        the Supabase API key as an auth header when the key is configured.
+        Query-string tokens (e.g. ?token=...) in the URL are stripped before
+        the filename/extension is parsed so the file router receives a proper
+        extension.
         """
         import aiohttp
-        from urllib.parse import urlparse
-        
+        from urllib.parse import urlparse, urlunparse
+        from app.config import settings
+
         file_path = None
         try:
-            # Parse filename from URL
+            # ── 1. Strip query-string / fragment before parsing the filename ──
+            # Supabase signed URLs contain ?token=... which breaks splitext.
             parsed_url = urlparse(file_url)
-            filename = os.path.basename(parsed_url.path)
+            # Use only scheme + netloc + path (no query / fragment) for name parsing
+            clean_path = parsed_url.path
+            filename = os.path.basename(clean_path)
             if not filename:
                 filename = "downloaded_file"
-                
+
             _, ext = os.path.splitext(filename)
+            if not ext:
+                logger.warning(
+                    f"Could not determine file extension from URL: {file_url}. "
+                    "Defaulting to .pdf — update the URL or bucket policy if this fails."
+                )
+                ext = ".pdf"
+
             unique_name = f"{uuid.uuid4().hex}{ext}"
             file_path = os.path.join(self.upload_dir, unique_name)
-            
+
+            # ── 2. Build download headers (auth for private Supabase buckets) ──
+            download_headers = {}
+            if settings.SUPABASE_KEY:
+                download_headers["apikey"] = settings.SUPABASE_KEY
+                download_headers["Authorization"] = f"Bearer {settings.SUPABASE_KEY}"
+                logger.debug("Attaching Supabase auth headers to download request")
+
             # Download file
             logger.info(f"Downloading file from URL: {file_url}")
             async with aiohttp.ClientSession() as session:
-                async with session.get(file_url) as response:
+                async with session.get(file_url, headers=download_headers) as response:
                     if response.status != 200:
-                        raise Exception(f"Failed to download file, status {response.status}")
+                        raise Exception(
+                            f"Failed to download file from Supabase (HTTP {response.status}). "
+                            "Check that the bucket is public or that SUPABASE_KEY is correct."
+                        )
                     content = await response.read()
                     
             with open(file_path, "wb") as f:
