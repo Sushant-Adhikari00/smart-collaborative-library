@@ -13,6 +13,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -117,19 +118,22 @@ public class DocumentController {
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<?>> updateDocument(
             @PathVariable Long id,
-            @RequestBody DocumentUpdateRequest request) {
-        ApiResponse<?> response = documentService.updateDocument(id, request);
+            @RequestBody DocumentUpdateRequest request,
+            Authentication authentication) {
+        String requesterEmail = authentication.getName();
+        ApiResponse<?> response = documentService.updateDocument(id, request, requesterEmail);
         return response.isSuccess()
                 ? ResponseEntity.ok(response)
                 : ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<?>> deleteDocument(@PathVariable Long id) {
-        ApiResponse<?> response = documentService.deleteDocument(id);
+    public ResponseEntity<ApiResponse<?>> deleteDocument(@PathVariable Long id, Authentication authentication) {
+        String requesterEmail = authentication.getName();
+        ApiResponse<?> response = documentService.deleteDocument(id, requesterEmail);
         return response.isSuccess()
                 ? ResponseEntity.ok(response)
-                : ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+                : ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
     }
 
     @PostMapping("/share")

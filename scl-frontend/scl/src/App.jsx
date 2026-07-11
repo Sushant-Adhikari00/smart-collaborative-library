@@ -23,7 +23,7 @@ const ProtectedRoute = ({ children }) => {
 const ProtectedAdminRoute = ({ children }) => {
   const { user } = useContext(AuthContext);
   if (!user) return <Navigate to="/login" />;
-  if (user.role !== "admin")
+  if (user.role !== "admin" && user.role !== "ADMIN" && user.role !== "ROLE_ADMIN")
     return (
       <div className="text-center mt-10 text-red-500 font-bold">
         Access Denied: Admins only

@@ -16,6 +16,7 @@ import com.scl.modules.document.repository.DocumentShareRepository;
 import com.scl.modules.document.dto.DocumentShareRequest;
 import com.scl.modules.auth.repository.UserRepository;
 import com.scl.modules.auth.entity.User;
+import com.scl.modules.auth.entity.Role;
 import com.scl.common.SupabaseStorageUtil;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -108,7 +109,7 @@ public class DocumentServiceImpl implements DocumentService {
     // UPDATE
     // ─────────────────────────────────────────────────────────────────
     @Override
-    public ApiResponse<?> updateDocument(Long id, DocumentUpdateRequest request) {
+    public ApiResponse<?> updateDocument(Long id, DocumentUpdateRequest request, String requesterEmail) {
         try {
             Optional<Document> documentOpt = documentRepository.findById(id);
             if (documentOpt.isEmpty()) {
@@ -116,6 +117,17 @@ public class DocumentServiceImpl implements DocumentService {
             }
 
             Document document = documentOpt.get();
+
+            // --- Ownership check ---
+            User requester = userRepository.findByEmail(requesterEmail).orElse(null);
+            boolean isAdmin = requester != null && requester.getRole() == Role.ADMIN;
+            if (!isAdmin) {
+                String uploaderName = document.getUploadedBy();
+                String requesterName = requester != null ? requester.getFullName() : null;
+                if (uploaderName == null || !uploaderName.equals(requesterName)) {
+                    return ApiResponse.error("Access Denied: you are not the owner of this document");
+                }
+            }
 
             if (request.getTitle() != null && !request.getTitle().isBlank()) {
                 document.setTitle(request.getTitle());
@@ -242,7 +254,7 @@ public class DocumentServiceImpl implements DocumentService {
     // DELETE
     // ─────────────────────────────────────────────────────────────────
     @Override
-    public ApiResponse<?> deleteDocument(Long id) {
+    public ApiResponse<?> deleteDocument(Long id, String requesterEmail) {
         try {
             Optional<Document> documentOpt = documentRepository.findById(id);
             if (documentOpt.isEmpty()) {
@@ -250,6 +262,17 @@ public class DocumentServiceImpl implements DocumentService {
             }
 
             Document document = documentOpt.get();
+
+            // --- Ownership check ---
+            User requester = userRepository.findByEmail(requesterEmail).orElse(null);
+            boolean isAdmin = requester != null && requester.getRole() == Role.ADMIN;
+            if (!isAdmin) {
+                String uploaderName = document.getUploadedBy();
+                String requesterName = requester != null ? requester.getFullName() : null;
+                if (uploaderName == null || !uploaderName.equals(requesterName)) {
+                    return ApiResponse.error("Access Denied: you are not the owner of this document");
+                }
+            }
 
             supabaseStorageUtil.deleteFile(document.getFileUrl());
 
