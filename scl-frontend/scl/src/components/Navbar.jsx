@@ -8,14 +8,16 @@ const Navbar = ({ onSearch, toggleTheme, currentTheme }) => {
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  const handleLogout = () => {
-    const confirmed = window.confirm("Are you sure you want to logout?");
-    if (!confirmed) return;
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+
+  const confirmLogout = () => {
     logout();
     navigate("/");
+    setIsLogoutModalOpen(false);
   };
 
   return (
+    <>
     <nav className="bg-base-100 shadow-lg p-4">
       <div className="container mx-auto flex justify-between items-center">
         {/* Logo */}
@@ -42,7 +44,7 @@ const Navbar = ({ onSearch, toggleTheme, currentTheme }) => {
           {user ? (
             <>
               <span className="text-primary">Welcome, {user.username || user.name || user.email}</span>
-              {(user.role === "ROLE_ADMIN" || user.role === "admin") && (
+              {(user.role === "ROLE_ADMIN" || user.role === "admin" || user.role === "ADMIN") && (
                 <Link to="/admin" className="btn btn-ghost btn-sm text-primary">
                   Admin
                 </Link>
@@ -51,7 +53,7 @@ const Navbar = ({ onSearch, toggleTheme, currentTheme }) => {
                 Upload
               </Link>
               <button
-                onClick={handleLogout}
+                onClick={() => setIsLogoutModalOpen(true)}
                 className="btn btn-secondary btn-sm flex items-center gap-2"
               >
                 <LogOutIcon className="h-4 w-4" /> Logout
@@ -93,12 +95,12 @@ const Navbar = ({ onSearch, toggleTheme, currentTheme }) => {
             {user ? (
               <>
                 <span className="text-neutral text-center">Welcome, {user.username || user.name || user.email}</span>
-                {(user.role === "ROLE_ADMIN" || user.role === "admin") && (
+                {(user.role === "ROLE_ADMIN" || user.role === "admin" || user.role === "ADMIN") && (
                   <Link to="/admin" className="btn btn-ghost text-neutral">Admin</Link>
                 )}
                 <Link to="/create" className="btn btn-primary">Upload</Link>
                 <button
-                  onClick={handleLogout}
+                  onClick={() => setIsLogoutModalOpen(true)}
                   className="btn btn-secondary flex items-center gap-2"
                 >
                   <LogOutIcon className="h-4 w-4" /> Logout
@@ -117,6 +119,23 @@ const Navbar = ({ onSearch, toggleTheme, currentTheme }) => {
         </div>
       )}
     </nav>
+      {/* Logout Modal */}
+      {isLogoutModalOpen && (
+        <dialog className="modal modal-open">
+          <div className="modal-box">
+            <h3 className="font-bold text-lg text-neutral">Confirm Logout</h3>
+            <p className="py-4 text-base-content">Are you sure you want to log out?</p>
+            <div className="modal-action">
+              <button className="btn btn-ghost" onClick={() => setIsLogoutModalOpen(false)}>Cancel</button>
+              <button className="btn btn-error" onClick={confirmLogout}>Logout</button>
+            </div>
+          </div>
+          <form method="dialog" className="modal-backdrop" onClick={() => setIsLogoutModalOpen(false)}>
+            <button>close</button>
+          </form>
+        </dialog>
+      )}
+    </>
   );
 };
 

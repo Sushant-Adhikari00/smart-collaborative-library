@@ -77,7 +77,7 @@ const AdminPage = () => {
     }
   };
 
-  if (!user || user.role !== "ROLE_ADMIN")
+  if (!user || (user.role !== "ROLE_ADMIN" && user.role !== "ADMIN" && user.role !== "admin"))
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="alert alert-error max-w-md">

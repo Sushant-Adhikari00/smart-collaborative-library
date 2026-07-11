@@ -21,21 +21,29 @@ const NoteCard = ({ note, setNotes }) => {
   const [shareEmail, setShareEmail] = useState("");
   const [shareLoading, setShareLoading] = useState(false);
 
+  // Delete State
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+
   // Spring Boot uses numeric `id`, not MongoDB `_id`
   const docId = note.id;
   // Determine if current user is the owner (uploadedBy is the username string)
-  const isOwner = user && note.uploadedBy && note.uploadedBy === user.username;
+  const isOwner = user && note.uploadedBy && note.uploadedBy === (user.fullName || user.username);
+  const isAdmin = user?.role === "ADMIN" || user?.role === "ROLE_ADMIN" || user?.role === "admin";
 
   // --- Delete Document ---
-  const handleDelete = async () => {
-    if (!window.confirm("Are you sure you want to delete this document?")) return;
+  const confirmDelete = async () => {
+    setDeleteLoading(true);
     try {
       await api.delete(`/documents/${docId}`);
       setNotes(prev => prev.filter(n => n.id !== docId));
       toast.success("Document deleted successfully");
+      setShowDeleteModal(false);
     } catch (error) {
       console.error("Delete error:", error);
       toast.error(error.response?.data?.message || "Failed to delete document");
+    } finally {
+      setDeleteLoading(false);
     }
   };
 
@@ -147,15 +155,15 @@ const NoteCard = ({ note, setNotes }) => {
                   <ShareIcon className='size-4' />
                 </button>
               )}
-              {/* Edit — owner only */}
-              {isOwner && (
+              {/* Edit — owner or admin */}
+              {(isOwner || isAdmin) && (
                 <Link to={`/update/${docId}`} className="btn btn-ghost btn-xs text-primary" title="Edit">
                   <PenSquareIcon className='size-4' />
                 </Link>
               )}
               {/* Delete — owner or admin */}
-              {(isOwner || user?.role === "ROLE_ADMIN") && (
-                <button className='btn btn-ghost btn-xs text-error' onClick={handleDelete} title="Delete">
+              {(isOwner || isAdmin) && (
+                <button className='btn btn-ghost btn-xs text-error' onClick={() => setShowDeleteModal(true)} title="Delete">
                   <Trash2Icon className='size-4' />
                 </button>
               )}
@@ -256,6 +264,28 @@ const NoteCard = ({ note, setNotes }) => {
             </form>
           </div>
         </div>
+      )}
+      {/* ---- Delete Confirmation Modal ---- */}
+      {showDeleteModal && (
+        <dialog className="modal modal-open">
+          <div className="modal-box">
+            <h3 className="font-bold text-lg text-neutral">Delete Document</h3>
+            <p className="py-4 text-base-content">
+              Are you sure you want to delete <strong>"{note.title}"</strong>? This action cannot be undone.
+            </p>
+            <div className="modal-action">
+              <button className="btn btn-ghost" onClick={() => setShowDeleteModal(false)} disabled={deleteLoading}>
+                Cancel
+              </button>
+              <button className="btn btn-error" onClick={confirmDelete} disabled={deleteLoading}>
+                {deleteLoading ? <span className="loading loading-spinner loading-xs" /> : "Delete"}
+              </button>
+            </div>
+          </div>
+          <form method="dialog" className="modal-backdrop" onClick={() => !deleteLoading && setShowDeleteModal(false)}>
+            <button>close</button>
+          </form>
+        </dialog>
       )}
     </>
   );

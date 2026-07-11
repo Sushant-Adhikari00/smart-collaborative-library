@@ -1,34 +1,54 @@
-import { useState, useEffect } from "react";
-import { ArrowLeftIcon } from "lucide-react";
+import { useState, useEffect, useContext } from "react";
+import { ArrowLeftIcon, SaveIcon, FileEditIcon } from "lucide-react";
 import { Link, useNavigate, useParams } from "react-router";
 import toast from "react-hot-toast";
 import api from "../lib/axios.js";
+import { AuthContext } from "../context/authContext.jsx";
 
 const UpdateNotePage = () => {
-  const { id } = useParams(); // get note id from URL
+  const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useContext(AuthContext);
 
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [fetching, setFetching] = useState(true);
 
-  // fetch existing note details
   useEffect(() => {
     const fetchNote = async () => {
+      setFetching(true);
       try {
-        // Spring Boot: GET /api/v1/documents/{id} → ApiResponse<Document>
         const res = await api.get(`/documents/${id}`);
         const doc = res.data.data;
+
+        // Ownership guard — only owner or admin may edit
+        const isAdmin =
+          user?.role === "ADMIN" ||
+          user?.role === "ROLE_ADMIN" ||
+          user?.role === "admin";
+        const isOwner =
+          doc.uploadedBy &&
+          doc.uploadedBy === (user?.fullName || user?.username);
+
+        if (!isAdmin && !isOwner) {
+          toast.error("Access Denied: you are not the owner of this document");
+          navigate("/");
+          return;
+        }
+
         setTitle(doc.title || "");
         setContent(doc.description || "");
       } catch (error) {
-        console.log("Error fetching document", error);
+        console.error("Error fetching document", error);
         toast.error("Failed to fetch document details");
+        navigate("/");
+      } finally {
+        setFetching(false);
       }
     };
     fetchNote();
-  }, [id]);
+  }, [id, user, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -40,67 +60,128 @@ const UpdateNotePage = () => {
 
     setLoading(true);
     try {
-      // Spring Boot: PUT /api/v1/documents/{id} with JSON body { title, description }
       await api.put(`/documents/${id}`, {
-        title,
-        description: content,
+        title: title.trim(),
+        description: content.trim(),
       });
-
       toast.success("Document updated successfully!");
       navigate("/");
     } catch (error) {
-      console.log("Error updating document", error);
-      toast.error("Failed to update document");
+      console.error("Error updating document", error);
+      toast.error(
+        error.response?.data?.message || "Failed to update document"
+      );
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-base-200">
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-2xl mx-auto">
-          <Link to={"/"} className="btn btn-ghost mb-6">
-            <ArrowLeftIcon className="size-5" />
-            Back to Notes
-          </Link>
+    <div className="min-h-screen bg-base-200 py-10 px-4">
+      <div className="max-w-2xl mx-auto">
+        {/* Back button */}
+        <Link to="/" className="btn btn-ghost mb-6 gap-2">
+          <ArrowLeftIcon className="size-4" />
+          Back to Documents
+        </Link>
 
-          <div className="card bg-base-100">
-            <div className="card-body">
-              <h2 className="card-title text-2xl mb-4">Update Document</h2>
-              <form onSubmit={handleSubmit}>
-                <div className="form-control mb-4">
-                  <label className="label">
-                    <span className="label-text">Title</span>
+        <div className="card bg-base-100 shadow-xl border border-primary/10">
+          <div className="card-body p-8">
+            {/* Header */}
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-2 rounded-xl bg-primary/10">
+                <FileEditIcon className="size-6 text-primary" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-neutral">
+                  Edit Document
+                </h1>
+                <p className="text-sm text-base-content/50">
+                  Update the title and description of your document.
+                </p>
+              </div>
+            </div>
+
+            {fetching ? (
+              /* Loading Skeleton */
+              <div className="space-y-4 animate-pulse">
+                <div>
+                  <div className="h-4 bg-base-300 rounded w-16 mb-2" />
+                  <div className="h-12 bg-base-300 rounded-xl w-full" />
+                </div>
+                <div>
+                  <div className="h-4 bg-base-300 rounded w-24 mb-2" />
+                  <div className="h-32 bg-base-300 rounded-xl w-full" />
+                </div>
+                <div className="flex justify-end gap-3">
+                  <div className="h-10 bg-base-300 rounded-xl w-24" />
+                  <div className="h-10 bg-primary/30 rounded-xl w-28" />
+                </div>
+              </div>
+            ) : (
+              <form onSubmit={handleSubmit} className="space-y-5">
+                {/* Title */}
+                <div className="form-control">
+                  <label className="label pb-1">
+                    <span className="label-text font-medium">
+                      Title <span className="text-error">*</span>
+                    </span>
                   </label>
                   <input
                     type="text"
-                    placeholder="Document Title"
-                    className="input input-bordered w-full"
+                    placeholder="Enter document title..."
+                    className="input input-bordered w-full focus:input-primary transition-colors"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
+                    disabled={loading}
+                    maxLength={255}
                   />
+                  <label className="label pt-1">
+                    <span className="label-text-alt text-base-content/40">
+                      {title.length}/255
+                    </span>
+                  </label>
                 </div>
 
-                <div className="form-control mb-4">
-                  <label className="label">
-                    <span className="label-text">Description</span>
+                {/* Description */}
+                <div className="form-control">
+                  <label className="label pb-1">
+                    <span className="label-text font-medium">Description</span>
                   </label>
                   <textarea
-                    placeholder="Short description..."
-                    className="textarea textarea-bordered h-32 w-full"
+                    placeholder="Enter a short description..."
+                    className="textarea textarea-bordered w-full h-36 resize-none focus:textarea-primary transition-colors"
                     value={content}
                     onChange={(e) => setContent(e.target.value)}
+                    disabled={loading}
                   />
                 </div>
 
-                <div className="card-actions justify-end">
-                  <button type="submit" className="btn btn-primary" disabled={loading}>
-                    {loading ? <span className="loading loading-spinner loading-sm" /> : "Save Changes"}
+                {/* Actions */}
+                <div className="flex items-center justify-end gap-3 pt-2">
+                  <Link to="/" className="btn btn-ghost" tabIndex={-1}>
+                    Cancel
+                  </Link>
+                  <button
+                    type="submit"
+                    className="btn btn-primary gap-2"
+                    disabled={loading || !title.trim()}
+                  >
+                    {loading ? (
+                      <>
+                        <span className="loading loading-spinner loading-sm" />
+                        Saving...
+                      </>
+                    ) : (
+                      <>
+                        <SaveIcon className="size-4" />
+                        Save Changes
+                      </>
+                    )}
                   </button>
                 </div>
               </form>
-            </div>
+            )}
           </div>
         </div>
       </div>
