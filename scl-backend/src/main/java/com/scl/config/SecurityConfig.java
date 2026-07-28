@@ -42,6 +42,7 @@ public class SecurityConfig {
                         .requestMatchers("/actuator/health").permitAll()
                         .requestMatchers("/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .requestMatchers("/v3/api-docs/**").permitAll()
+                        .requestMatchers("/ws/**").permitAll()
                         // Admin only
                         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                         // Everything else requires authentication
