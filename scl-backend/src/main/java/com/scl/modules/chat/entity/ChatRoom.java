@@ -1,6 +1,7 @@
 package com.scl.modules.chat.entity;
 
 import com.scl.modules.auth.entity.User;
+import com.scl.modules.collaboration.entity.CollaborationGroup;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -26,6 +27,10 @@ public class ChatRoom {
 
     @Column(nullable = false)
     private String name;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "group_id")
+    private CollaborationGroup group;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "created_by", nullable = false)

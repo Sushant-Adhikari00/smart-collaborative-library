@@ -1,0 +1,240 @@
+# Implementation Plan: Frontend Workflow for Smart Collaborative Learning & AI Academic Resource Sharing System
+
+## Overview & Vision
+
+The goal is to architect a modern, clean, context-focused academic frontend for the **Smart Collaborative Learning & AI Academic Resource Sharing System**. Taking inspiration from **Google Drive**, **Notion**, and **NotebookLM**, the application prioritizes single-context workflow, minimal page reloads, fast inline modals, real-time collaboration, and grounded AI assistance.
+
+---
+
+## Technical Understanding & Key Constraints
+
+1. **Context Preservation**: Users must be able to view, analyze with AI, discuss, and collaborate on a document without breaking focus or performing unnecessary full-page navigations.
+2. **Resource Viewer Modal (80–90% Screen)**: High-density interactive modal housing a high-performance PDF renderer on the left (70%) and dynamic context/AI/collaboration tools on the right (30%).
+3. **Dual AI Modes**:
+   - **Private AI Assistant**: Single-user, doc-grounded query workspace with citation, prompt suggestions, and history control.
+   - **Shared AI Assistant**: Multi-user workspace tab where questions, answers, and sources are synchronized across collaboration members.
+4. **Gated Collaboration Access**:
+   - Members directly enter the Collaboration Workspace.
+   - Non-members see a Request Access Dialog.
+   - Strictly enforced **max 2 collaboration requests** per user per resource owner.
+5. **Real-time Collaboration Workspace**:
+   - Persistent Threaded Discussion Board (pinning, sorting, mentions).
+   - WebSocket Live Chat (typing indicators, presence, online status, reactions).
+   - Shared AI Assistant.
+   - Shared Resources Repository.
+   - Member & Role Management (Owner, Moderator, Member).
+
+---
+
+## System Architecture & User Navigation Flow
+
+```mermaid
+graph TD
+    A[Dashboard / Main Academic Hub] -->|Click Card / View| B[Resource Viewer Modal 80-90%]
+    
+    subgraph Resource Viewer Modal
+        B --> B1[Left 70%: PDF Viewer + Controls]
+        B --> B2[Right 30%: Doc Info & Metadata]
+        B2 --> C1[Action: Chat with AI]
+        B2 --> C2[Action: Collaborate]
+        B2 --> C3[Action: Download / Bookmark / Share]
+    end
+
+    C1 -->|Open Sub-Panel / Window| D[Private AI Chat Window - NotebookLM Style]
+    
+    C2 -->|Check Membership| E{Is Already Member?}
+    E -->|Yes| F[Open Collaboration Workspace]
+    E -->|No| G[Request Access Dialog]
+    
+    G -->|Max Requests <= 2| H[Send Request -> Owner Notification]
+    G -->|Max Requests > 2| I[Button Disabled: Limit Reached]
+    
+    H -->|Owner Accepts| F
+    
+    subgraph Collaboration Workspace Tabs
+        F --> F1[Discussion Tab]
+        F --> F2[Live Chat Tab - WebSocket]
+        F --> F3[Shared AI Tab]
+        F --> F4[Shared Resources Tab]
+        F --> F5[Members Tab]
+    end
+```
+
+---
+
+## Detailed Page & Component Hierarchy
+
+```
+src/
+├── components/
+│   ├── layout/
+│   │   ├── Navbar.jsx               # Header, User Avatar, Global Search, Notifications Bell
+│   │   ├── Sidebar.jsx              # Workspace Navigation (Drive / Notion style)
+│   │   └── MainLayout.jsx           # Master responsive container
+│   ├── dashboard/
+│   │   ├── ResourceGrid.jsx         # Card grid container with filtering & sorting
+│   │   ├── ResourceCard.jsx         # Individual rich resource card
+│   │   ├── FilterBar.jsx            # Category, File Type, Ratings, Verification filters
+│   │   └── VerifiedBadge.jsx        # Teacher Verification Indicator
+│   ├── viewer/
+│   │   ├── ResourceViewerModal.jsx  # Main 80-90% backdrop overlay container
+│   │   ├── PdfViewer.jsx            # PDF canvas renderer with zoom, search, page controls
+│   │   ├── PdfToolbar.jsx           # Controls for zoom, search bar, full screen, page jump
+│   │   └── ResourceSidebar.jsx      # Summary, keywords, related docs, action triggers
+│   ├── ai/
+│   │   ├── PrivateAiDrawer.jsx      # Slide-over or overlay Private AI Chat window
+│   │   ├── SharedAiPanel.jsx        # Collaborative AI thread container
+│   │   ├── MessageList.jsx          # Chat bubble list with citation chips
+│   │   ├── CitationBadge.jsx        # Clickable source/page reference link
+│   │   └── PromptSuggestions.jsx    # Quick action prompt pills
+│   ├── collaboration/
+│   │   ├── RequestAccessModal.jsx   # Access request dialog with 2-request enforcement
+│   │   ├── NotificationCenter.jsx   # Owner pending request inbox & action buttons
+│   │   ├── WorkspaceHeader.jsx      # Group meta, owner details, member avatars
+│   │   ├── DiscussionTab.jsx        # Threaded forum with pinning & sorting
+│   │   ├── LiveChatTab.jsx          # Real-time WebSocket chat & typing indicators
+│   │   ├── SharedResourcesTab.jsx   # Group resource library grid
+│   │   └── MembersTab.jsx           # Role management & member list
+│   └── ui/                          # Design system primitives (Button, Modal, Badge, Tabs, Input, Avatar)
+└── pages/
+    ├── DashboardPage.jsx            # Main resource browsing hub
+    ├── CollaborationWorkspacePage.jsx # Dedicated collaboration hub
+    └── NotificationsPage.jsx        # Full notifications management
+```
+
+---
+
+## Detailed UI Specifications & Interactions
+
+### 1. Dashboard (Card-Based Resource Browsing)
+
+- **Layout**: Google Drive / Notion mix grid with search, filter tags, and quick-sort.
+- **Resource Card Components**:
+  - **Thumbnail**: Document preview snippet / cover image.
+  - **Header**: Verified Badge (Teacher Verified icon + tooltip), Category Pill, File Type Badge (PDF, DOCX, etc.).
+  - **Body**: Title (bold, max 2 lines), Short Description (2–3 line truncation with ellipsis).
+  - **Metadata Row**: Author Avatar & Name, Upload Date (relative, e.g., "2 days ago").
+  - **Engagement Bar**: Star Rating (Avg score + count), Total Downloads, Total Comments.
+  - **Card Action Bar**: View, Download, Bookmark, Share, Rate.
+  - **Interaction**: Clicking anywhere on the card opens the **Resource Viewer Modal**.
+
+---
+
+### 2. Resource Viewer (80–90% Screen Overlay Modal)
+
+- **Container**: Backdrop overlay occupying 80–90% of screen height/width with smooth backdrop blur.
+- **Header Bar**:
+  - Document Title & Category Tag.
+  - Author Name, Upload Date, Teacher Verification Badge.
+  - Quick Stats: Download Count, Rating, Comment Count.
+  - Action Buttons: Close (X) button top-right.
+- **Split Layout**:
+  - **Left Side (70%) - PDF & Document Viewer**:
+    - Smooth scrolling document canvas (`react-pdf` / `pdfjs-dist`).
+    - Fixed top/bottom floating toolbar: Zoom In (+), Zoom Out (-), Current/Total Page Input (`Page X of Y`), Search Bar with match highlighting, Fullscreen toggle, Loading skeleton.
+  - **Right Side (30%) - Document Metadata & Control Panel**:
+    - **Description**: Full text description.
+    - **Keywords & Tags**: Categorization chips.
+    - **AI Generated Summary**: Auto-generated document overview bullet points.
+    - **Related Documents**: Cards linking to similar resources.
+    - **Primary Action Panel**:
+      - `[Chat with AI]` (Highlights in primary accent color)
+      - `[Collaborate]` (Gated entry trigger)
+      - `[Download]`, `[Bookmark]`, `[Share]`
+
+---
+
+### 3. Private AI Chat (NotebookLM Experience)
+
+- **Trigger**: Clicking "Chat with AI" in the Resource Viewer opens an inline panel or drawer.
+- **Scope & Privacy**: Strictly private to the active user session; answers exclusively grounded in the selected document.
+- **Features**:
+  - **Prompt Suggestions**: Auto-generated contextual prompts (e.g., "Summarize Section 2", "List key definitions").
+  - **Citations & Sources**: Inline clickable badges (e.g., `[Page 4, Para 2]`) that jump the PDF viewer directly to the referenced page/text.
+  - **Toolbar Controls**: `[Regenerate Response]`, `[Copy Text]`, `[Clear Chat History]`.
+  - **State Feedback**: Typing indicator / streaming response text.
+
+---
+
+### 4. Collaboration Request & Gating Flow
+
+- **Trigger**: Clicking "Collaborate" in Resource Viewer.
+- **Validation**:
+  - System checks membership state for the current resource group.
+  - **If Member**: Directly transitions user into the `Collaboration Workspace`.
+  - **If Non-Member**: Opens **Request Access Dialog**.
+- **Request Access Dialog**:
+  - Displays: Group Name, Owner Name & Avatar, Current Member Count, Purpose & Short Description.
+  - **Rule Enforcement**:
+    - Tracks `requestCount` for user-group pair (Max: 2).
+    - If `requestCount < 2`: Renders active `[Request Access]` and `[Cancel]` buttons.
+    - If `requestCount >= 2`: `[Request Access]` button is disabled with error banner: *"You have reached the maximum collaboration request limit (2/2)."*
+- **Owner Notification Handling**:
+  - Resource owner receives a pending access notification in their Notification Center.
+  - Actions for Owner: `Accept`, `Reject`, `View Profile`, `Send Direct Message`.
+  - Upon `Accept`, socket/state updates and user gains immediate member access.
+
+---
+
+### 5. Collaboration Workspace Page
+
+When granted access, the workspace presents a tabbed view focused on that shared document:
+
+#### Header Section
+- Group Title & Description.
+- Document Link, Owner Badge, Creation Date, Active Member Avatars.
+
+#### Workspace Tabs
+
+1. **Discussion Tab (Persistent Threaded Forum)**
+   - Threaded comment posting & multi-level replies.
+   - `@user` mentions with autocompletion.
+   - Edit / Delete (author only).
+   - Teacher "Pin Comment" feature for high-priority announcements.
+   - Sorting options: *Newest*, *Oldest*, *Most Helpful (Upvotes)*.
+
+2. **Live Chat Tab (WebSocket Real-Time Messaging)**
+   - Real-time text messaging with WebSocket connection.
+   - Attachment & file sharing.
+   - Real-time typing indicators (`"Sushant is typing..."`).
+   - Active online users list indicator.
+   - Message read status / receipts.
+   - Reply to message anchor, Pinned messages banner, optional Emoji reactions.
+
+3. **Shared AI Tab (Group NotebookLM Assistant)**
+   - Synchronized group AI chat instance.
+   - Every member sees incoming questions, AI responses, source citations, and suggested follow-up questions in real time.
+   - Ideal for group study sessions and shared synthesis.
+
+4. **Shared Resources Tab**
+   - Repository of supplementary files, notes, and links added by group members.
+   - Card layout: Title, Author, File Type, Upload Date, Quick Preview, Download, Bookmark.
+
+5. **Members Tab**
+   - Categorized member list: *Owner*, *Moderators*, *Members*.
+   - Presence indicators: *Online (Green)*, *Offline (Gray)*, *Last Active timestamp*.
+   - Owner actions: *Assign Moderator*, *Remove Member*, *View Profile*.
+
+---
+
+## State Management & Real-Time Strategy
+
+1. **Global Client State**: React Context / Zustand for Auth State, Active User Profile, Global Notifications, and Active Workspace Context.
+2. **Resource Viewer State**: Local state tracking current PDF page, zoom scale, search term, modal open/close status, and AI panel drawer visibility.
+3. **Real-time Synchronization (WebSockets / STOMP)**:
+   - Live Chat messages & typing events.
+   - Shared AI question/answer streaming.
+   - Member online presence updates.
+   - Real-time notification badge increment on access request approval.
+
+---
+
+## Verification & Design Review Checklist
+
+- [x] **No Code Generation Constraint**: Implementation plan formatted as architectural design doc without code output.
+- [x] **Dashboard Structure**: Complete card details (Title, Author, Ratings, Verification, Actions).
+- [x] **80-90% Resource Viewer Modal**: Left 70% PDF renderer, Right 30% Doc info & AI/Collaboration triggers.
+- [x] **NotebookLM Private AI**: Grounded QA, citations, suggestions, prompt tools.
+- [x] **Gated Collaboration Logic**: Max 2 requests rule enforcement with disabled UI feedback.
+- [x] **Workspace 5 Tabs**: Discussion, Live Chat (WS), Shared AI, Shared Resources, Members.
+- [x] **UX Context Preservation**: Single-page flow with minimal navigation friction.

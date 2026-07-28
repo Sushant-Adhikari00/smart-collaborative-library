@@ -8,6 +8,8 @@ import AdminPage from "./pages/AdminPage.jsx";
 import ResetPage from "./pages/ResetPage.jsx";
 import RequestReset from "./pages/RequestReset.jsx";
 import ContactUs from "./pages/ContactUs.jsx";
+import CollaborationDashboard from "./pages/Dashboard/CollaborationDashboard.jsx";
+import GroupWorkspacePage from "./pages/Collaboration/GroupWorkspacePage.jsx";
 import { AuthProvider, AuthContext } from "./context/authContext.jsx";
 import { useContext, useState, useEffect } from "react";
 import Navbar from "./components/Navbar.jsx";
@@ -85,6 +87,24 @@ const App = () => {
                 element={
                   <ProtectedRoute>
                     <UpdateNotePage />
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* Collaboration routes */}
+              <Route
+                path="/collaboration"
+                element={
+                  <ProtectedRoute>
+                    <CollaborationDashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/collaboration/groups/:groupId"
+                element={
+                  <ProtectedRoute>
+                    <GroupWorkspacePage />
                   </ProtectedRoute>
                 }
               />

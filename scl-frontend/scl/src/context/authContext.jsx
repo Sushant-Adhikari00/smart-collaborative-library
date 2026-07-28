@@ -2,19 +2,29 @@ import { createContext, useState, useEffect } from "react";
 
 export const AuthContext = createContext();
 
+// Helper: read the stored user synchronously so we never start as null
+const getStoredUser = () => {
+  try {
+    const raw = localStorage.getItem("user");
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+};
+
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
+  // Initialize synchronously from localStorage — avoids the flash-of-null
+  // that causes the Navbar to fire an unauthenticated /notifications request
+  // before the useEffect hydration runs, triggering the 401 interceptor logout.
+  const [user, setUser] = useState(() => getStoredUser());
 
-  // Load from localStorage on mount
+  // Keep localStorage in sync whenever user changes
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) setUser(JSON.parse(storedUser));
-  }, []);
-
-  // Save to localStorage when user changes
-  useEffect(() => {
-    if (user) localStorage.setItem("user", JSON.stringify(user));
-    else localStorage.removeItem("user");
+    if (user) {
+      localStorage.setItem("user", JSON.stringify(user));
+    } else {
+      localStorage.removeItem("user");
+    }
   }, [user]);
 
   const logout = () => {
