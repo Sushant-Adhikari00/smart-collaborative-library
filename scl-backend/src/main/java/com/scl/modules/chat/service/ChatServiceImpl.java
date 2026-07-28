@@ -14,6 +14,7 @@ import com.scl.modules.chat.entity.MessageType;
 import com.scl.modules.chat.repository.ChatMessageRepository;
 import com.scl.modules.chat.repository.ChatRoomMemberRepository;
 import com.scl.modules.chat.repository.ChatRoomRepository;
+import com.scl.modules.ai.service.AiServiceClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -36,6 +37,7 @@ public class ChatServiceImpl implements ChatService {
     private final ChatMessageRepository chatMessageRepository;
     private final UserRepository userRepository;
     private final SimpMessagingTemplate messagingTemplate;
+    private final AiServiceClient aiServiceClient;
 
     @Override
     @Transactional
@@ -163,7 +165,52 @@ public class ChatServiceImpl implements ChatService {
         String destination = "/topic/chat/" + request.getRoomId();
         messagingTemplate.convertAndSend(destination, dto);
 
+        // Handle @AI mention in chat message
+        if (request.getMessage() != null && request.getMessage().trim().toLowerCase().startsWith("@ai")) {
+            processAiChatMessageAsync(request.getMessage(), room, destination);
+        }
+
         return dto;
+    }
+
+    private void processAiChatMessageAsync(String fullMessage, ChatRoom room, String destination) {
+        new Thread(() -> {
+            try {
+                String question = fullMessage.substring(fullMessage.toLowerCase().indexOf("@ai") + 3).trim();
+                if (question.isBlank()) {
+                    question = "Hello! How can I assist you with your study group resources?";
+                }
+
+                // Retrieve AI User bot account or create transient system user
+                User aiUser = userRepository.findByEmail("ai.bot@scl.edu")
+                        .orElseGet(() -> userRepository.save(User.builder()
+                                .email("ai.bot@scl.edu")
+                                .fullName("AI Assistant")
+                                .passwordHash("N/A")
+                                .role(com.scl.modules.auth.entity.Role.ADMIN)
+                                .profilePicture("https://api.dicebear.com/7.x/bottts/svg?seed=scl-ai")
+                                .isActive(true)
+                                .build()));
+
+                var aiResponse = aiServiceClient.chat(question, room.getId().toString());
+                String aiAnswer = aiResponse != null && aiResponse.getAnswer() != null ?
+                        aiResponse.getAnswer() : "I couldn't process your request at the moment.";
+
+                ChatMessage aiMessage = ChatMessage.builder()
+                        .room(room)
+                        .sender(aiUser)
+                        .message(aiAnswer)
+                        .messageType(MessageType.TEXT)
+                        .build();
+
+                ChatMessage savedAiMsg = chatMessageRepository.save(aiMessage);
+                ChatMessageDTO aiDto = mapToChatMessageDTO(savedAiMsg);
+
+                messagingTemplate.convertAndSend(destination, aiDto);
+            } catch (Exception e) {
+                log.error("Failed to generate and broadcast @AI chat response: {}", e.getMessage(), e);
+            }
+        }).start();
     }
 
     // ---- Private Helper Methods ----

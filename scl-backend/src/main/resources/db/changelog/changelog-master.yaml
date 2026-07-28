@@ -9,3 +9,9 @@ databaseChangeLog:
       file: db/changelog/migrations/004-add-ai-fields-and-document-shares.yaml
   - include:
       file: db/changelog/migrations/005-create-chat-tables.yaml
+  - include:
+      file: db/changelog/migrations/006-create-collaboration-tables.yaml
+  - include:
+      file: db/changelog/migrations/007-create-collaboration-requests-table.yaml
+  - include:
+      file: db/changelog/migrations/008-create-document-comments-and-ratings.yaml

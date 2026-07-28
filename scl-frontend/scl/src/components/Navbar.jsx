@@ -1,14 +1,36 @@
-import { useContext, useState } from "react";
+import { useContext, useState, useEffect, useCallback } from "react";
 import { Link, useNavigate } from "react-router";
 import { AuthContext } from "../context/authContext.jsx";
-import { SearchIcon, LogOutIcon, Menu, X, Sun, Moon } from "lucide-react";
+import { SearchIcon, LogOutIcon, Menu, X, Sun, Moon, Users, Bell } from "lucide-react";
+import OwnerNotificationsModal from "./collaboration/OwnerNotificationsModal.jsx";
+import api from "../lib/axios.js";
 
 const Navbar = ({ onSearch, toggleTheme, currentTheme }) => {
   const { user, logout } = useContext(AuthContext);
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  // Fetch unread notification count when logged in
+  const fetchUnreadCount = useCallback(async () => {
+    if (!user) { setUnreadCount(0); return; }
+    try {
+      const res = await api.get('/notifications');
+      const data = res.data?.data || [];
+      setUnreadCount(data.filter(n => !n.isRead).length);
+    } catch {
+      // Silently fail - don't disturb UX if this call fails
+    }
+  }, [user]);
+
+  useEffect(() => {
+    fetchUnreadCount();
+    // Poll every 60s for new notifications
+    const interval = setInterval(fetchUnreadCount, 60000);
+    return () => clearInterval(interval);
+  }, [fetchUnreadCount]);
 
   const confirmLogout = () => {
     logout();
@@ -18,113 +40,138 @@ const Navbar = ({ onSearch, toggleTheme, currentTheme }) => {
 
   return (
     <>
-    <nav className="bg-base-100 shadow-lg p-4">
-      <div className="container mx-auto flex justify-between items-center">
-        {/* Logo */}
-        <Link to="/" className="font-bold text-2xl text-primary">
-          SCL Library
-        </Link>
+      <nav className="bg-base-100 shadow-lg p-4 sticky top-0 z-30">
+        <div className="container mx-auto flex justify-between items-center">
+          {/* Logo */}
+          <Link to="/" className="font-bold text-2xl text-primary flex items-center gap-2">
+            📚 SCL Library
+          </Link>
 
-        {/* Search Bar */}
-        <div className="hidden md:flex flex-1 justify-center px-4">
+          {/* Search Bar */}
+          <div className="hidden md:flex flex-1 justify-center px-4">
             <div className="relative w-full max-w-lg">
               <input
                 type="text"
-                placeholder="Search notes..."
+                placeholder="Search resources, topics, or authors..."
                 onChange={(e) => onSearch(e.target.value)}
-                className="bg-base-200 text-neutral placeholder-base-content w-full py-2 pl-10 pr-4 rounded-full border-2 border-primary focus:border-primary focus:outline-none transition-colors"
+                className="bg-base-200 text-neutral placeholder-base-content/60 w-full py-2 pl-10 pr-4 rounded-full border-2 border-primary/50 focus:border-primary focus:outline-none transition-colors text-sm"
               />
               <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-primary" />
             </div>
           </div>
 
-        {/* Right-side buttons (Desktop) */}
-        <div className="hidden md:flex items-center space-x-4">
-          <Link to="/contact" className="btn btn-ghost btn-sm text-primary">Contact Us</Link>
-          {user ? (
-            <>
-              <span className="text-primary">Welcome, {user.username || user.name || user.email}</span>
-              {(user.role === "ROLE_ADMIN" || user.role === "admin" || user.role === "ADMIN") && (
-                <Link to="/admin" className="btn btn-ghost btn-sm text-primary">
-                  Admin
-                </Link>
-              )}
-              <Link to="/create" className="btn btn-primary btn-sm">
-                Upload
-              </Link>
-              <button
-                onClick={() => setIsLogoutModalOpen(true)}
-                className="btn btn-secondary btn-sm flex items-center gap-2"
-              >
-                <LogOutIcon className="h-4 w-4" /> Logout
-              </button>
-            </>
-          ) : (
-            <>
-              <Link to="/login" className="btn btn-primary btn-sm">Login</Link>
-              <Link to="/signup" className="btn btn-secondary btn-sm">Sign Up</Link>
-            </>
-          )}
-          <button onClick={toggleTheme} className="btn btn-ghost btn-circle text-primary">
-            {currentTheme === 'retro' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-          </button>
-        </div>
-
-        {/* Mobile Menu Button */}
-        <div className="md:hidden">
-          <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="btn btn-ghost text-neutral">
-            {isMenuOpen ? <X /> : <Menu />}
-          </button>
-        </div>
-      </div>
-
-      {/* Mobile Menu */}
-      {isMenuOpen && (
-        <div className="md:hidden mt-4">
-          <div className="flex flex-col space-y-4">
-            <div className="relative w-full">
-                <input
-                  type="text"
-                  placeholder="Search notes..."
-                  onChange={(e) => onSearch(e.target.value)}
-                  className="bg-base-200 text-neutral placeholder-base-content w-full py-2 pl-10 pr-4 rounded-full border-2 border-primary focus:border-primary focus:outline-none transition-colors"
-                />
-                <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-primary" />
-              </div>
-            <Link to="/contact" className="btn btn-ghost text-neutral">Contact Us</Link>
+          {/* Right-side buttons (Desktop) */}
+          <div className="hidden md:flex items-center space-x-3">
+            <Link to="/contact" className="btn btn-ghost btn-sm text-primary">Contact Us</Link>
             {user ? (
               <>
-                <span className="text-neutral text-center">Welcome, {user.username || user.name || user.email}</span>
+                <span className="text-primary text-xs font-semibold">
+                  Hi, {user.username || user.name || user.email}
+                </span>
+
                 {(user.role === "ROLE_ADMIN" || user.role === "admin" || user.role === "ADMIN") && (
-                  <Link to="/admin" className="btn btn-ghost text-neutral">Admin</Link>
+                  <Link to="/admin" className="btn btn-ghost btn-sm text-primary">
+                    Admin
+                  </Link>
                 )}
-                <Link to="/create" className="btn btn-primary">Upload</Link>
+
+                <Link to="/collaboration" className="btn btn-ghost btn-sm text-primary flex items-center gap-1">
+                  <Users className="h-4 w-4" /> Study Groups
+                </Link>
+
+                {/* Notifications Bell */}
+                <button
+                  onClick={() => setIsNotificationsOpen(true)}
+                  className="btn btn-ghost btn-circle btn-sm text-primary relative"
+                  title="Notifications"
+                >
+                  <Bell className="h-5 w-5" />
+                  {unreadCount > 0 && (
+                    <span className="badge badge-xs badge-error absolute top-1 right-1 min-w-[14px] h-[14px] text-[9px]">
+                      {unreadCount > 9 ? '9+' : unreadCount}
+                    </span>
+                  )}
+                </button>
+
+                <Link to="/create" className="btn btn-primary btn-sm">
+                  Upload Resource
+                </Link>
+
                 <button
                   onClick={() => setIsLogoutModalOpen(true)}
-                  className="btn btn-secondary flex items-center gap-2"
+                  className="btn btn-secondary btn-sm flex items-center gap-1.5"
                 >
                   <LogOutIcon className="h-4 w-4" /> Logout
                 </button>
               </>
             ) : (
               <>
-                <Link to="/login" className="btn btn-primary">Login</Link>
-                <Link to="/signup" className="btn btn-secondary">Sign Up</Link>
+                <Link to="/login" className="btn btn-primary btn-sm">Login</Link>
+                <Link to="/signup" className="btn btn-secondary btn-sm">Sign Up</Link>
               </>
             )}
             <button onClick={toggleTheme} className="btn btn-ghost btn-circle text-primary">
               {currentTheme === 'retro' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
             </button>
           </div>
+
+          {/* Mobile Menu Button */}
+          <div className="md:hidden">
+            <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="btn btn-ghost text-neutral">
+              {isMenuOpen ? <X /> : <Menu />}
+            </button>
+          </div>
         </div>
-      )}
-    </nav>
+
+        {/* Mobile Menu */}
+        {isMenuOpen && (
+          <div className="md:hidden mt-4 space-y-3 p-2 bg-base-200 rounded-xl">
+            <div className="relative w-full">
+              <input
+                type="text"
+                placeholder="Search notes..."
+                onChange={(e) => onSearch(e.target.value)}
+                className="bg-base-100 text-neutral placeholder-base-content/60 w-full py-2 pl-10 pr-4 rounded-full border-2 border-primary focus:border-primary focus:outline-none transition-colors text-xs"
+              />
+              <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary" />
+            </div>
+            <Link to="/contact" className="btn btn-ghost btn-sm w-full">Contact Us</Link>
+            {user ? (
+              <>
+                <button
+                  onClick={() => setIsNotificationsOpen(true)}
+                  className="btn btn-ghost btn-sm w-full flex items-center gap-2 justify-center text-primary"
+                >
+                  <Bell className="h-4 w-4" />
+                  Notifications {unreadCount > 0 && `(${unreadCount})`}
+                </button>
+                <Link to="/collaboration" className="btn btn-ghost btn-sm w-full flex items-center gap-1 justify-center">
+                  <Users className="h-4 w-4" /> Study Groups
+                </Link>
+                <Link to="/create" className="btn btn-primary btn-sm w-full">Upload</Link>
+                <button
+                  onClick={() => setIsLogoutModalOpen(true)}
+                  className="btn btn-secondary btn-sm w-full flex items-center gap-2 justify-center"
+                >
+                  <LogOutIcon className="h-4 w-4" /> Logout
+                </button>
+              </>
+            ) : (
+              <div className="flex gap-2">
+                <Link to="/login" className="btn btn-primary btn-sm flex-1">Login</Link>
+                <Link to="/signup" className="btn btn-secondary btn-sm flex-1">Sign Up</Link>
+              </div>
+            )}
+          </div>
+        )}
+      </nav>
+
       {/* Logout Modal */}
       {isLogoutModalOpen && (
         <dialog className="modal modal-open">
           <div className="modal-box">
             <h3 className="font-bold text-lg text-neutral">Confirm Logout</h3>
-            <p className="py-4 text-base-content">Are you sure you want to log out?</p>
+            <p className="py-4 text-base-content text-sm">Are you sure you want to log out?</p>
             <div className="modal-action">
               <button className="btn btn-ghost" onClick={() => setIsLogoutModalOpen(false)}>Cancel</button>
               <button className="btn btn-error" onClick={confirmLogout}>Logout</button>
@@ -135,6 +182,13 @@ const Navbar = ({ onSearch, toggleTheme, currentTheme }) => {
           </form>
         </dialog>
       )}
+
+      {/* Owner Notifications Inbox Modal */}
+      <OwnerNotificationsModal
+        isOpen={isNotificationsOpen}
+        onClose={() => setIsNotificationsOpen(false)}
+        onCountChange={(count) => setUnreadCount(count)}
+      />
     </>
   );
 };

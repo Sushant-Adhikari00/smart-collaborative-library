@@ -1,0 +1,113 @@
+# Collaboration Module — Implementation Walkthrough
+
+Both builds are **green**:
+- ✅ `mvn clean compile -DskipTests` — BUILD SUCCESS (152 source files)
+- ✅ `npm run build` — Vite production bundle built in 6.36s
+
+---
+
+## Backend Changes (`scl-backend`)
+
+### Liquibase Database Migration
+| File | What it does |
+|------|-------------|
+| [006-create-collaboration-tables.yaml](file:///c:/final_year_project/scl-backend/src/main/resources/db/changelog/migrations/006-create-collaboration-tables.yaml) | Creates `collaboration_groups`, `group_members`, `group_resources`, `resource_comments`, `teacher_announcements`, `notifications`; adds `group_id` FK to `chat_rooms` |
+| [changelog-master.yaml](file:///c:/final_year_project/scl-backend/src/main/resources/db/changelog/changelog-master.yaml) | Includes 006 migration |
+
+### New Entities (`modules/collaboration/entity/`)
+| Entity | Key Fields |
+|--------|-----------|
+| [CollaborationGroup.java](file:///c:/final_year_project/scl-backend/src/main/java/com/scl/modules/collaboration/entity/CollaborationGroup.java) | name, description, invite_code (auto-generated UUID prefix), owner FK, members list |
+| [GroupMember.java](file:///c:/final_year_project/scl-backend/src/main/java/com/scl/modules/collaboration/entity/GroupMember.java) | group FK, user FK, groupRole (OWNER/MODERATOR/MEMBER), joinedAt |
+| [GroupResource.java](file:///c:/final_year_project/scl-backend/src/main/java/com/scl/modules/collaboration/entity/GroupResource.java) | group FK, uploader FK, fileUrl, fileType, isVerified, isPinned, aiSummary, aiKeyPoints, aiKeywords |
+| [ResourceComment.java](file:///c:/final_year_project/scl-backend/src/main/java/com/scl/modules/collaboration/entity/ResourceComment.java) | resource FK, author FK, parentComment FK (self-ref for threading), replies list |
+| [TeacherAnnouncement.java](file:///c:/final_year_project/scl-backend/src/main/java/com/scl/modules/collaboration/entity/TeacherAnnouncement.java) | group FK, teacher FK, title, content, isPinned |
+| [Notification.java](file:///c:/final_year_project/scl-backend/src/main/java/com/scl/modules/collaboration/entity/Notification.java) | recipient FK, title, message, notificationType enum, isRead |
+
+### Modified Entity
+| File | Change |
+|------|--------|
+| [ChatRoom.java](file:///c:/final_year_project/scl-backend/src/main/java/com/scl/modules/chat/entity/ChatRoom.java) | Added `CollaborationGroup group` FK — every study group auto-gets its own chat room on creation |
+
+### Services
+| Service | Responsibility |
+|---------|---------------|
+| [CollaborationGroupService.java](file:///c:/final_year_project/scl-backend/src/main/java/com/scl/modules/collaboration/service/CollaborationGroupService.java) | Group CRUD, join by invite code, leave, member role management, auto-creates `ChatRoom` on group creation |
+| [GroupResourceService.java](file:///c:/final_year_project/scl-backend/src/main/java/com/scl/modules/collaboration/service/GroupResourceService.java) | Upload to Supabase → triggers `AiServiceClient.processDocumentByUrl()` → saves AI summary → notifies group members |
+| [ResourceCommentService.java](file:///c:/final_year_project/scl-backend/src/main/java/com/scl/modules/collaboration/service/ResourceCommentService.java) | CRUD for threaded comments with parent/reply nesting |
+| [TeacherAnnouncementService.java](file:///c:/final_year_project/scl-backend/src/main/java/com/scl/modules/collaboration/service/TeacherAnnouncementService.java) | Post/list announcements; RBAC: Teacher, Owner, or Moderator only |
+| [NotificationService.java](file:///c:/final_year_project/scl-backend/src/main/java/com/scl/modules/collaboration/service/NotificationService.java) | Persists notification + pushes real-time WebSocket event to `/topic/user/{userId}/notifications` |
+| [CollaborationDashboardService.java](file:///c:/final_year_project/scl-backend/src/main/java/com/scl/modules/collaboration/service/CollaborationDashboardService.java) | Aggregates groups, recent resources, and unread notifications for dashboard |
+
+### `@AI` Chat Integration ([ChatServiceImpl.java](file:///c:/final_year_project/scl-backend/src/main/java/com/scl/modules/chat/service/ChatServiceImpl.java))
+- Detects messages starting with `@AI` (case-insensitive)
+- Spawns a background thread → calls FastAPI `/ai/chat`
+- Saves AI response to `chat_messages` table (sender = `ai.bot@scl.edu`)
+- Broadcasts AI response over STOMP to `/topic/chat/{roomId}` so **all group members see it simultaneously**
+
+### REST API Controllers (all under `/api/collaboration/...`)
+| Controller | Routes |
+|-----------|--------|
+| [CollaborationGroupController.java](file:///c:/final_year_project/scl-backend/src/main/java/com/scl/modules/collaboration/controller/CollaborationGroupController.java) | `POST /groups`, `GET /groups`, `GET /groups/{id}`, `PUT /groups/{id}`, `DELETE /groups/{id}`, `POST /groups/join`, `POST /groups/{id}/leave`, member CRUD |
+| [GroupResourceController.java](file:///c:/final_year_project/scl-backend/src/main/java/com/scl/modules/collaboration/controller/GroupResourceController.java) | `POST /groups/{id}/resources` (multipart), `GET`, `PATCH /verify`, `PATCH /pin`, `DELETE` |
+| [ResourceCommentController.java](file:///c:/final_year_project/scl-backend/src/main/java/com/scl/modules/collaboration/controller/ResourceCommentController.java) | `GET /resources/{id}/comments`, `POST`, `PUT /comments/{id}`, `DELETE /comments/{id}` |
+| [TeacherAnnouncementController.java](file:///c:/final_year_project/scl-backend/src/main/java/com/scl/modules/collaboration/controller/TeacherAnnouncementController.java) | `POST /groups/{id}/announcements`, `GET` |
+| [CollaborationDashboardController.java](file:///c:/final_year_project/scl-backend/src/main/java/com/scl/modules/collaboration/controller/CollaborationDashboardController.java) | `GET /collaboration/dashboard` |
+| [NotificationController.java](file:///c:/final_year_project/scl-backend/src/main/java/com/scl/modules/collaboration/controller/NotificationController.java) | `GET /notifications`, `PATCH /notifications/{id}/read` |
+
+---
+
+## Frontend Changes (`scl-frontend/scl`)
+
+### New Dependency
+```
+@stomp/stompjs  — robust STOMP WebSocket client
+```
+
+### Service Layer
+| File | Purpose |
+|------|---------|
+| [collaborationApi.js](file:///c:/final_year_project/scl-frontend/scl/src/services/collaborationApi.js) | Axios wrappers for all collaboration REST endpoints |
+
+### Custom Hook
+| File | Purpose |
+|------|---------|
+| [useGroupChat.js](file:///c:/final_year_project/scl-frontend/scl/src/hooks/useGroupChat.js) | Loads previous messages via REST, then maintains live STOMP subscription on `/topic/chat/{roomId}` |
+
+### UI Components (`components/collaboration/`)
+| Component | Purpose |
+|-----------|---------|
+| [GroupChatRoom.jsx](file:///c:/final_year_project/scl-frontend/scl/src/components/collaboration/GroupChatRoom.jsx) | Real-time group chat with `@AI` quick-prompt chips, AI bot message bubbles (purple), typing quick-send bar |
+| [GroupResourcesView.jsx](file:///c:/final_year_project/scl-frontend/scl/src/components/collaboration/GroupResourcesView.jsx) | Multi-format resource grid with AI Summary preview, Teacher Verified/Pinned badges, upload modal |
+| [ResourceDiscussionModal.jsx](file:///c:/final_year_project/scl-frontend/scl/src/components/collaboration/ResourceDiscussionModal.jsx) | Threaded comments with inline reply input and nested reply rendering |
+| [GroupMembersModal.jsx](file:///c:/final_year_project/scl-frontend/scl/src/components/collaboration/GroupMembersModal.jsx) | Member roster with role badge; OWNER gets inline role-switcher and remove-member button |
+| [TeacherAnnouncementsView.jsx](file:///c:/final_year_project/scl-frontend/scl/src/components/collaboration/TeacherAnnouncementsView.jsx) | Pinned announcement feed; Teacher/Owner/Moderator gets a "Post Announcement" button |
+
+### Pages
+| Page | Route | Description |
+|------|-------|-------------|
+| [CollaborationDashboard.jsx](file:///c:/final_year_project/scl-frontend/scl/src/pages/Dashboard/CollaborationDashboard.jsx) | `/collaboration` | Glassmorphism dashboard: group cards, recent AI resources, notifications panel, @AI tips |
+| [GroupWorkspacePage.jsx](file:///c:/final_year_project/scl-frontend/scl/src/pages/Collaboration/GroupWorkspacePage.jsx) | `/collaboration/groups/:groupId` | Sticky header with group identity + invite code copy; tabbed workspace for Chat / Resources / Announcements / Members |
+
+### Wiring
+| File | Change |
+|------|--------|
+| [App.jsx](file:///c:/final_year_project/scl-frontend/scl/src/App.jsx) | Routes `/collaboration` and `/collaboration/groups/:groupId` added (both protected) |
+| [vite.config.js](file:///c:/final_year_project/scl-frontend/scl/vite.config.js) | Proxy `/api` → `http://localhost:8080` and `/ws` → WebSocket upgrade |
+| [Navbar.jsx](file:///c:/final_year_project/scl-frontend/scl/src/components/Navbar.jsx) | "Study Groups" link (with Users icon) added to both desktop & mobile menus |
+
+---
+
+## How to Test
+
+1. **Start the backend** — `cd scl-backend && mvn spring-boot:run`
+2. **Start the AI service** — `cd scl-ai-service && uvicorn app.main:app --reload`
+3. **Start the frontend** — `cd scl-frontend/scl && npm run dev`
+4. Navigate to **`/collaboration`** → Create or join a study group
+5. Open the group → navigate through **Chat / Resources / Announcements / Members** tabs
+6. In Chat, type `@AI Explain Normalization` → watch AI respond to all group members live
+7. Upload a PDF → wait for AI summary to appear on the resource card
+8. As a Teacher, verify a resource and post an announcement
+
+> [!TIP]
+> The invite code is displayed in the group workspace header. Share it (or copy it) and use **Join via Code** from any other logged-in account to test multi-user group collaboration.
