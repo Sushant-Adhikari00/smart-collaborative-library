@@ -1,0 +1,135 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1-create-chat-rooms-table
+      author: antigravity
+      changes:
+        - createTable:
+            tableName: chat_rooms
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: name
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_by
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP
+        - addForeignKeyConstraint:
+            baseTableName: chat_rooms
+            baseColumnNames: created_by
+            constraintName: fk_chat_rooms_created_by
+            referencedTableName: users
+            referencedColumnNames: id
+
+  - changeSet:
+      id: 2-create-chat-room-members-table
+      author: antigravity
+      changes:
+        - createTable:
+            tableName: chat_room_members
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: room_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: user_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: joined_at
+                  type: TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP
+        - addForeignKeyConstraint:
+            baseTableName: chat_room_members
+            baseColumnNames: room_id
+            constraintName: fk_chat_room_members_room
+            referencedTableName: chat_rooms
+            referencedColumnNames: id
+            onDelete: CASCADE
+        - addForeignKeyConstraint:
+            baseTableName: chat_room_members
+            baseColumnNames: user_id
+            constraintName: fk_chat_room_members_user
+            referencedTableName: users
+            referencedColumnNames: id
+            onDelete: CASCADE
+        - addUniqueConstraint:
+            tableName: chat_room_members
+            columnNames: room_id, user_id
+            constraintName: uq_chat_room_members_room_user
+
+  - changeSet:
+      id: 3-create-chat-messages-table
+      author: antigravity
+      changes:
+        - createTable:
+            tableName: chat_messages
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: room_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: sender_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: message
+                  type: TEXT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: message_type
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP
+        - addForeignKeyConstraint:
+            baseTableName: chat_messages
+            baseColumnNames: room_id
+            constraintName: fk_chat_messages_room
+            referencedTableName: chat_rooms
+            referencedColumnNames: id
+            onDelete: CASCADE
+        - addForeignKeyConstraint:
+            baseTableName: chat_messages
+            baseColumnNames: sender_id
+            constraintName: fk_chat_messages_sender
+            referencedTableName: users
+            referencedColumnNames: id
+            onDelete: CASCADE

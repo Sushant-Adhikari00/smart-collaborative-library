@@ -7,3 +7,5 @@ databaseChangeLog:
       file: db/changelog/migrations/003-create-users-and-audit-logs.yaml
   - include:
       file: db/changelog/migrations/004-add-ai-fields-and-document-shares.yaml
+  - include:
+      file: db/changelog/migrations/005-create-chat-tables.yaml
