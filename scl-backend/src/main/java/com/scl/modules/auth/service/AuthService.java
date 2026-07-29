@@ -3,11 +3,9 @@ package com.scl.modules.auth.service;
 import com.scl.audit.service.AuditService;
 import com.scl.exception.ResourceNotFoundException;
 import com.scl.exception.UnauthorizedException;
-import com.scl.modules.auth.dto.AuthResponse;
-import com.scl.modules.auth.dto.LoginRequest;
-import com.scl.modules.auth.dto.RegisterRequest;
-import com.scl.modules.auth.dto.UserDTO;
+import com.scl.modules.auth.dto.*;
 import com.scl.modules.auth.entity.RefreshToken;
+
 import com.scl.modules.auth.entity.User;
 import com.scl.modules.auth.repository.RefreshTokenRepository;
 import com.scl.modules.auth.repository.UserRepository;
@@ -29,12 +27,12 @@ import java.time.ZoneId;
 import java.util.HexFormat;
 
 import com.scl.common.EmailService;
-import com.scl.modules.auth.dto.ForgotPasswordRequest;
 import com.scl.modules.auth.entity.PasswordResetOtp;
 import com.scl.modules.auth.repository.PasswordResetOtpRepository;
 import java.security.SecureRandom;
 import java.util.List;
 
+import com.scl.modules.auth.dto.ResetPasswordRequest;
 
 @Slf4j
 @Service
@@ -183,7 +181,7 @@ public class AuthService {
 
     private static final int OTP_EXPIRY_MINUTES = 10;
 
-   // @Override
+
     public void forgotPassword(ForgotPasswordRequest request) {
         String email = request.getEmail();
 
@@ -212,6 +210,29 @@ public class AuthService {
         emailService.sendOtpEmail(email, otp);
     }
 
+
+    public void resetPassword(ResetPasswordRequest request) {
+        PasswordResetOtp resetOtp = otpRepository
+                .findTopByEmailAndUsedFalseOrderByCreatedAtDesc(request.getEmail())
+                .orElseThrow(() -> new IllegalArgumentException("Invalid or expired OTP"));
+
+        if (resetOtp.getExpiryTime().isBefore(LocalDateTime.now())) {
+            throw new IllegalArgumentException("OTP has expired. Please request a new one.");
+        }
+
+        if (!passwordEncoder.matches(request.getOtp(), resetOtp.getOtpHash())) {
+            throw new IllegalArgumentException("Invalid OTP");
+        }
+
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        user.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
+
+        resetOtp.setUsed(true);
+        otpRepository.save(resetOtp);
+    }
 
     // ---- Private helpers ----
 

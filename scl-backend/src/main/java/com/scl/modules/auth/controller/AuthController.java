@@ -38,6 +38,16 @@ public class AuthController {
         ));
     }
 
+    @PostMapping("/reset-password")
+    public ResponseEntity<ApiResponse<Integer>> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+        authService.resetPassword(request);
+        return ResponseEntity.ok(new ApiResponse<>(
+                true,
+                "Password has been reset successfully.",
+                HttpStatus.OK.value(),
+                null
+        ));
+    }
     @Operation(summary = "Register a new user", description = "Creates a new user account and returns JWT tokens")
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<AuthResponse>> register(
