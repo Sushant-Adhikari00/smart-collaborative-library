@@ -1,11 +1,7 @@
 package com.scl.modules.auth.controller;
 
 import com.scl.common.ApiResponse;
-import com.scl.modules.auth.dto.AuthResponse;
-import com.scl.modules.auth.dto.LoginRequest;
-import com.scl.modules.auth.dto.RefreshTokenRequest;
-import com.scl.modules.auth.dto.RegisterRequest;
-import com.scl.modules.auth.dto.UserDTO;
+import com.scl.modules.auth.dto.*;
 import com.scl.modules.auth.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -30,6 +26,17 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
 
     private final AuthService authService;
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<ApiResponse<Integer>> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+        authService.forgotPassword(request);
+        return ResponseEntity.ok(new ApiResponse<>(
+                true,
+                "If this email is registered, a reset code has been sent.",
+                HttpStatus.OK.value(),
+                null
+        ));
+    }
 
     @Operation(summary = "Register a new user", description = "Creates a new user account and returns JWT tokens")
     @PostMapping("/register")

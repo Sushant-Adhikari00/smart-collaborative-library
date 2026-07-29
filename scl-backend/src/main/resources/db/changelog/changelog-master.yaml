@@ -15,3 +15,5 @@ databaseChangeLog:
       file: db/changelog/migrations/007-create-collaboration-requests-table.yaml
   - include:
       file: db/changelog/migrations/008-create-document-comments-and-ratings.yaml
+  - include:
+      file: db/changelog/migrations/009-create-password-reset-otp-table.yaml

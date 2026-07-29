@@ -28,6 +28,14 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.HexFormat;
 
+import com.scl.common.EmailService;
+import com.scl.modules.auth.dto.ForgotPasswordRequest;
+import com.scl.modules.auth.entity.PasswordResetOtp;
+import com.scl.modules.auth.repository.PasswordResetOtpRepository;
+import java.security.SecureRandom;
+import java.util.List;
+
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -166,6 +174,44 @@ public class AuthService {
 
         return mapToUserDTO(user);
     }
+
+    /**
+     * adding method for forget password feature .
+     */
+    private final PasswordResetOtpRepository otpRepository;
+    private final EmailService emailService;
+
+    private static final int OTP_EXPIRY_MINUTES = 10;
+
+   // @Override
+    public void forgotPassword(ForgotPasswordRequest request) {
+        String email = request.getEmail();
+
+        // Don't reveal whether the email exists — respond the same way either way
+        if (!userRepository.existsByEmail(email)) {
+            return;
+        }
+
+        // Invalidate any previous unused OTPs for this email
+        List<PasswordResetOtp> existingOtps = otpRepository.findByEmailAndUsedFalse(email);
+        existingOtps.forEach(otp -> otp.setUsed(true));
+        otpRepository.saveAll(existingOtps);
+
+        // Generate a 6-digit OTP
+        String otp = String.format("%06d", new SecureRandom().nextInt(1_000_000));
+
+        PasswordResetOtp resetOtp = PasswordResetOtp.builder()
+                .email(email)
+                .otpHash(passwordEncoder.encode(otp))
+                .expiryTime(LocalDateTime.now().plusMinutes(OTP_EXPIRY_MINUTES))
+                .used(false)
+                .build();
+
+        otpRepository.save(resetOtp);
+
+        emailService.sendOtpEmail(email, otp);
+    }
+
 
     // ---- Private helpers ----
 

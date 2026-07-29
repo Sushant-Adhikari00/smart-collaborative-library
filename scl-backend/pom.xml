@@ -167,6 +167,11 @@
             <artifactId>s3</artifactId>
             <version>2.25.0</version>
         </dependency>
+        <!-- mail Dependencies -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-mail</artifactId>
+        </dependency>
 
         <!-- Test Dependencies -->
         <dependency>
