@@ -1,7 +1,8 @@
 import { useState, useEffect, useContext } from "react";
 import {
   Trash2Icon, UserIcon, FileTextIcon, ShieldIcon,
-  ActivityIcon, UsersIcon, ToggleLeftIcon, ToggleRightIcon
+  ActivityIcon, UsersIcon, ToggleLeftIcon, ToggleRightIcon,
+  RefreshCwIcon, SparklesIcon
 } from "lucide-react";
 import api from "../lib/axios.js";
 import toast from "react-hot-toast";
@@ -14,6 +15,8 @@ const AdminPage = () => {
   const [analytics, setAnalytics] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("users");
+  const [reprocessingAll, setReprocessingAll] = useState(false);
+  const [reprocessingId, setReprocessingId] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -74,6 +77,40 @@ const AdminPage = () => {
       toast.success("Role updated successfully");
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to update role");
+    }
+  };
+
+  const handleReprocessAll = async () => {
+    if (!window.confirm("Reprocess ALL documents through the AI pipeline? This may take a while.")) return;
+    setReprocessingAll(true);
+    try {
+      const res = await api.post("/documents/reprocess-all");
+      toast.success(res.data?.message || "All documents reprocessed!");
+      // Refresh documents list
+      const docsRes = await api.get("/documents");
+      setDocuments(docsRes.data?.data || []);
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to reprocess documents");
+    } finally {
+      setReprocessingAll(false);
+    }
+  };
+
+  const handleReprocessOne = async (docId) => {
+    setReprocessingId(docId);
+    try {
+      const res = await api.post(`/documents/${docId}/reprocess`);
+      toast.success(res.data?.message || "Document reprocessed!");
+      // Update document in local state
+      if (res.data?.data) {
+        setDocuments((prev) =>
+          prev.map((d) => (d.id === docId ? { ...d, ...res.data.data } : d))
+        );
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to reprocess document");
+    } finally {
+      setReprocessingId(null);
     }
   };
 
@@ -197,6 +234,25 @@ const AdminPage = () => {
           {/* Documents Tab */}
           {activeTab === "documents" && (
             <section>
+              {/* Reprocess All Button */}
+              <div className="flex items-center justify-between mb-4">
+                <p className="text-sm text-base-content/60">
+                  {documents.length} document{documents.length !== 1 ? 's' : ''} total
+                </p>
+                <button
+                  className="btn btn-sm btn-secondary gap-2"
+                  onClick={handleReprocessAll}
+                  disabled={reprocessingAll || documents.length === 0}
+                >
+                  {reprocessingAll ? (
+                    <span className="loading loading-spinner loading-xs" />
+                  ) : (
+                    <SparklesIcon className="size-4" />
+                  )}
+                  {reprocessingAll ? "Reprocessing..." : "Reprocess All AI"}
+                </button>
+              </div>
+
               {documents.length === 0 ? (
                 <p className="text-center text-base-content/50 py-10">No documents found.</p>
               ) : (
@@ -206,6 +262,7 @@ const AdminPage = () => {
                       <tr>
                         <th>Title</th>
                         <th>Uploaded By</th>
+                        <th>AI Status</th>
                         <th>File URL</th>
                         <th className="text-right">Actions</th>
                       </tr>
@@ -216,6 +273,15 @@ const AdminPage = () => {
                           <td className="font-medium">{doc.title}</td>
                           <td className="text-base-content/70">{doc.uploadedBy || "-"}</td>
                           <td>
+                            {doc.aiSummary ? (
+                              <span className="badge badge-success badge-sm gap-1">
+                                <SparklesIcon className="size-3" /> Processed
+                              </span>
+                            ) : (
+                              <span className="badge badge-warning badge-sm gap-1">Pending</span>
+                            )}
+                          </td>
+                          <td>
                             {doc.fileUrl ? (
                               <a href={doc.fileUrl} target="_blank" rel="noopener noreferrer" className="link link-primary text-xs">
                                 View File
@@ -224,7 +290,19 @@ const AdminPage = () => {
                               <span className="text-base-content/40 text-xs">No file</span>
                             )}
                           </td>
-                          <td className="text-right">
+                          <td className="text-right flex items-center justify-end gap-1">
+                            <button
+                              className="btn btn-ghost btn-xs text-secondary"
+                              onClick={() => handleReprocessOne(doc.id)}
+                              disabled={reprocessingId === doc.id}
+                              title="Reprocess AI"
+                            >
+                              {reprocessingId === doc.id ? (
+                                <span className="loading loading-spinner loading-xs" />
+                              ) : (
+                                <RefreshCwIcon className="size-4" />
+                              )}
+                            </button>
                             <button
                               className="btn btn-ghost btn-xs text-error"
                               onClick={() => handleDeleteDocument(doc.id)}

@@ -70,8 +70,8 @@ const ResourceCard = ({ note, setNotes }) => {
 
   const category = note.category || 'Lecture Notes';
   const fileType = note.fileType || (note.fileUrl?.endsWith('.pdf') ? 'PDF' : 'DOCX');
-  const totalDownloads = note.downloadCount || note.totalDownloads || 128;
-  const totalComments = note.commentCount || note.totalComments || 14;
+  const totalDownloads = note.downloadCount ?? note.totalDownloads ?? 0;
+  const totalComments = note.commentCount ?? note.totalComments ?? 0;
 
   const handleCardClick = (e) => {
     // Prevent trigger if clicking action buttons directly

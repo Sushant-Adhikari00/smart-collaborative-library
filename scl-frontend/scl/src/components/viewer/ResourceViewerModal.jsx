@@ -34,10 +34,12 @@ const ResourceViewerModal = ({ isOpen, onClose, note }) => {
 
   const isVerified = note.isVerified || note.teacherVerified || note.category === 'Lecture Notes' || true;
   const rating = note.rating || note.averageRating || 4.8;
-  const downloads = note.downloadCount || note.totalDownloads || 142;
-  const commentsCount = note.commentCount || note.totalComments || 18;
+  const downloads = note.downloadCount ?? note.totalDownloads ?? 0;
+  const commentsCount = note.commentCount ?? note.totalComments ?? 0;
 
-  const keywords = note.keywords || ["Distributed Systems", "Consensus", "Fault Tolerance", "Microservices"];
+  const keywords = note.aiKeywords 
+    ? note.aiKeywords.split(',').map(k => k.trim()).filter(Boolean) 
+    : (note.keywords || ["Distributed Systems", "Consensus", "Fault Tolerance", "Microservices"]);
   const relatedDocs = note.relatedDocs || [
     { title: "Advanced Distributed Consensus Notes", category: "Lecture Notes" },
     { title: "Raft & Paxos Comparison Sheet", category: "Guide" }
@@ -154,11 +156,22 @@ const ResourceViewerModal = ({ isOpen, onClose, note }) => {
                   <h4 className="text-xs font-bold text-secondary flex items-center gap-1.5">
                     <SparklesIcon className="size-3.5" /> AI Executive Summary
                   </h4>
-                  <ul className="text-[11px] text-base-content/80 space-y-1 list-disc list-inside leading-normal">
-                    <li>Covers architectural models and distributed algorithms.</li>
-                    <li>Includes step-by-step mathematical proofs.</li>
-                    <li>Highlights practical trade-offs in cloud deployments.</li>
-                  </ul>
+                  {note.aiSummary ? (
+                    <p className="text-[11.5px] text-base-content/90 leading-relaxed font-medium">
+                      {note.aiSummary}
+                    </p>
+                  ) : (
+                    <p className="text-[11px] text-base-content/60 italic leading-relaxed">
+                      AI summary is processing or not available.
+                    </p>
+                  )}
+                  {note.aiKeyPoints && (
+                    <ul className="text-[11px] text-base-content/80 space-y-1.5 list-disc list-inside leading-normal pt-1 border-t border-secondary/10 mt-1">
+                      {note.aiKeyPoints.split('\n').filter(p => p.trim()).map((point, i) => (
+                        <li key={i}>{point.replace(/^[-\*\s•\d+\.\)]+/, '')}</li>
+                      ))}
+                    </ul>
+                  )}
                 </div>
 
                 {/* Related Documents */}
