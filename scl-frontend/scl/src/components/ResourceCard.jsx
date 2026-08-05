@@ -68,7 +68,7 @@ const ResourceCard = ({ note, setNotes }) => {
     ? new Date(note.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
     : 'Jul 2026';
 
-  const category = note.category || 'Lecture Notes';
+  const category = note.categoryName || note.category || 'Uncategorised';
   const fileType = note.fileType || (note.fileUrl?.endsWith('.pdf') ? 'PDF' : 'DOCX');
   const totalDownloads = note.downloadCount ?? note.totalDownloads ?? 0;
   const totalComments = note.commentCount ?? note.totalComments ?? 0;
@@ -210,6 +210,25 @@ const ResourceCard = ({ note, setNotes }) => {
           <p className="text-xs text-base-content/75 line-clamp-2 leading-relaxed">
             {description}
           </p>
+
+          {/* AI Keyword Tags */}
+          {note.aiKeywords && (
+            <div className="flex flex-wrap gap-1 pt-0.5">
+              {note.aiKeywords
+                .split(",")
+                .map((kw) => kw.trim())
+                .filter(Boolean)
+                .slice(0, 4)
+                .map((kw) => (
+                  <span
+                    key={kw}
+                    className="badge badge-xs bg-primary/10 text-primary border border-primary/20 font-medium"
+                  >
+                    #{kw}
+                  </span>
+                ))}
+            </div>
+          )}
 
           {/* Author Name & Upload Date */}
           <div className="text-[11px] text-base-content/50 pt-1 flex items-center justify-between border-t border-base-200">

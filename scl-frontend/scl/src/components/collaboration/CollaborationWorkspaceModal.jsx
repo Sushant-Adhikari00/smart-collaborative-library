@@ -10,7 +10,6 @@ import {
   CalendarIcon,
   ShieldCheckIcon
 } from 'lucide-react';
-import DiscussionTab from './DiscussionTab.jsx';
 import LiveChatTab from './LiveChatTab.jsx';
 import SharedAiTab from './SharedAiTab.jsx';
 import SharedResourcesTab from './SharedResourcesTab.jsx';
@@ -18,7 +17,7 @@ import MembersTab from './MembersTab.jsx';
 
 const CollaborationWorkspaceModal = ({ isOpen, onClose, note }) => {
   const { user } = useContext(AuthContext);
-  const [activeTab, setActiveTab] = useState('discussion');
+  const [activeTab, setActiveTab] = useState('chat');
   const docId = note?.id || note?._id;
   const isOwner = user && note?.uploadedBy &&
     (note.uploadedBy === user.email || note.uploadedBy === user.username);
@@ -26,7 +25,6 @@ const CollaborationWorkspaceModal = ({ isOpen, onClose, note }) => {
   if (!isOpen) return null;
 
   const tabs = [
-    { id: 'discussion', label: 'Discussion', icon: MessageSquareIcon, count: '3' },
     { id: 'chat', label: 'Live Chat', icon: MessageCircleIcon, count: null, badge: 'Live' },
     { id: 'ai', label: 'Shared AI', icon: BotIcon, count: null, badge: 'Group' },
     { id: 'resources', label: 'Shared Resources', icon: Share2Icon, count: '3' },
@@ -95,10 +93,9 @@ const CollaborationWorkspaceModal = ({ isOpen, onClose, note }) => {
 
         {/* Workspace Active Tab Viewport */}
         <div className="flex-1 overflow-hidden bg-base-100 relative">
-          {activeTab === 'discussion' && <DiscussionTab documentId={docId} />}
           {activeTab === 'chat' && <LiveChatTab documentId={docId} />}
           {activeTab === 'ai' && <SharedAiTab documentId={docId} title={note?.title} />}
-          {activeTab === 'resources' && <SharedResourcesTab documentId={docId} />}
+          {activeTab === 'resources' && <SharedResourcesTab documentId={docId} isOwner={!!isOwner} />}
           {activeTab === 'members' && <MembersTab documentId={docId} isOwner={!!isOwner} />}
         </div>
       </div>

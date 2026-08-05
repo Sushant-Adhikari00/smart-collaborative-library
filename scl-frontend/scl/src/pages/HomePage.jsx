@@ -18,6 +18,7 @@ const HomePage = ({ searchQuery }) => {
 
   const categories = ["All", "Lecture Notes", "Research Papers", "Study Guides", "Lab Reports"];
 
+
   useEffect(() => {
     const fetchNotes = async () => {
       try {
@@ -40,11 +41,18 @@ const HomePage = ({ searchQuery }) => {
   }, [searchQuery]);
 
   const filteredNotes = notes.filter((note) => {
+    const q = searchQuery.toLowerCase();
     const matchesSearch =
-      (note.title ?? "").toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (note.description ?? "").toLowerCase().includes(searchQuery.toLowerCase());
+      !q ||
+      (note.title ?? "").toLowerCase().includes(q) ||
+      (note.description ?? "").toLowerCase().includes(q) ||
+      // Search inside AI-extracted keywords/tags (comma-separated string)
+      (note.aiKeywords ?? "").toLowerCase().includes(q) ||
+      // Also search inside aiKeyPoints for broad semantic matching
+      (note.aiKeyPoints ?? "").toLowerCase().includes(q);
+
     const matchesCategory =
-      selectedCategory === "All" || (note.category || "Lecture Notes") === selectedCategory;
+      selectedCategory === "All" || note.categoryName === selectedCategory;
 
     return matchesSearch && matchesCategory;
   });

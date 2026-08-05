@@ -47,22 +47,22 @@ export default function TeacherAnnouncementsView({ groupId, platformRole, groupR
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between bg-slate-900/60 p-4 rounded-xl border border-slate-800 backdrop-blur-md">
+    <div className="space-y-6 text-base-content">
+      <div className="flex items-center justify-between bg-base-100 p-4 rounded-xl border border-base-300">
         <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/30">
+          <div className="p-2.5 rounded-xl bg-warning/20 text-warning border border-warning/30">
             <Megaphone className="w-5 h-5" />
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-white">Teacher & Official Announcements</h3>
-            <p className="text-xs text-slate-400">Important course notices, schedule updates, and syllabus guidelines</p>
+            <h3 className="text-lg font-semibold text-base-content">Teacher & Official Announcements</h3>
+            <p className="text-xs text-base-content/60">Important course notices, schedule updates, and syllabus guidelines</p>
           </div>
         </div>
 
         {canPost && (
           <button
             onClick={() => setShowModal(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white text-sm font-medium rounded-xl shadow-lg transition"
+            className="btn btn-warning gap-2"
           >
             <Plus className="w-4 h-4" />
             <span>Post Announcement</span>
@@ -71,11 +71,11 @@ export default function TeacherAnnouncementsView({ groupId, platformRole, groupR
       </div>
 
       {loading ? (
-        <div className="flex justify-center p-12 text-slate-400">
-          <span className="loading loading-spinner text-amber-500" />
+        <div className="flex justify-center p-12 text-base-content/60">
+          <span className="loading loading-spinner text-warning" />
         </div>
       ) : announcements.length === 0 ? (
-        <div className="text-center p-12 bg-slate-900/40 rounded-2xl border border-slate-800 text-slate-400 space-y-2">
+        <div className="text-center p-12 bg-base-100 rounded-2xl border border-base-300 text-base-content/70 space-y-2">
           <p className="text-base font-medium">No announcements posted yet</p>
         </div>
       ) : (
@@ -85,26 +85,26 @@ export default function TeacherAnnouncementsView({ groupId, platformRole, groupR
               key={anno.id}
               className={`p-5 rounded-2xl border transition ${
                 anno.isPinned
-                  ? 'bg-gradient-to-br from-amber-950/30 to-slate-900 border-amber-500/40 shadow-amber-950/20'
-                  : 'bg-slate-900/70 border-slate-800'
+                  ? 'bg-gradient-to-br from-warning/15 to-base-100 border-warning/40 shadow-sm'
+                  : 'bg-base-100 border-base-300'
               }`}
             >
               <div className="flex items-center justify-between gap-2 mb-2">
                 <div className="flex items-center gap-2">
-                  <h4 className="text-base font-bold text-white">{anno.title}</h4>
+                  <h4 className="text-base font-bold text-base-content">{anno.title}</h4>
                   {anno.isPinned && (
-                    <span className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                    <span className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-warning/20 text-warning border border-warning/30">
                       <Pin className="w-3 h-3" /> PINNED
                     </span>
                   )}
                 </div>
-                <span className="text-xs text-slate-500">{new Date(anno.createdAt).toLocaleDateString()}</span>
+                <span className="text-xs text-base-content/50">{new Date(anno.createdAt).toLocaleDateString()}</span>
               </div>
 
-              <p className="text-sm text-slate-200 leading-relaxed whitespace-pre-line mb-3">{anno.content}</p>
+              <p className="text-sm text-base-content/85 leading-relaxed whitespace-pre-line mb-3">{anno.content}</p>
 
-              <div className="text-xs text-slate-400 font-medium">
-                Posted by Teacher: <strong className="text-slate-200">{anno.teacherName}</strong>
+              <div className="text-xs text-base-content/60 font-medium">
+                Posted by Teacher: <strong className="text-base-content/80">{anno.teacherName}</strong>
               </div>
             </div>
           ))}
@@ -114,31 +114,31 @@ export default function TeacherAnnouncementsView({ groupId, platformRole, groupR
       {/* Post Modal */}
       {showModal && (
         <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-lg p-6 shadow-2xl space-y-4">
-            <h3 className="text-xl font-bold text-white flex items-center gap-2">
-              <Megaphone className="w-5 h-5 text-amber-400" /> New Announcement
+          <div className="bg-base-100 border border-base-300 rounded-2xl w-full max-w-lg p-6 shadow-2xl space-y-4 text-base-content">
+            <h3 className="text-xl font-bold text-base-content flex items-center gap-2">
+              <Megaphone className="w-5 h-5 text-warning" /> New Announcement
             </h3>
 
             <form onSubmit={handlePost} className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">Announcement Title</label>
+                <label className="block text-xs font-semibold text-base-content/75 mb-1">Announcement Title</label>
                 <input
                   type="text"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="e.g. Midterm Examination Guidelines"
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-amber-500"
+                  className="input input-bordered w-full bg-base-200 text-sm"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">Content</label>
+                <label className="block text-xs font-semibold text-base-content/75 mb-1">Content</label>
                 <textarea
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
                   placeholder="Write notice details here..."
                   rows={4}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-amber-500"
+                  className="textarea textarea-bordered w-full bg-base-200 text-sm"
                 />
               </div>
 
@@ -150,7 +150,7 @@ export default function TeacherAnnouncementsView({ groupId, platformRole, groupR
                   onChange={(e) => setIsPinned(e.target.checked)}
                   className="checkbox checkbox-warning checkbox-sm"
                 />
-                <label htmlFor="pinCheck" className="text-xs font-semibold text-slate-300 cursor-pointer">
+                <label htmlFor="pinCheck" className="text-xs font-semibold text-base-content/85 cursor-pointer">
                   Pin to top of study group feed
                 </label>
               </div>
@@ -159,13 +159,13 @@ export default function TeacherAnnouncementsView({ groupId, platformRole, groupR
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="px-4 py-2 text-sm font-medium text-slate-400 hover:text-white"
+                  className="btn btn-ghost"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white text-sm font-medium rounded-xl shadow-lg"
+                  className="btn btn-warning"
                 >
                   Publish Announcement
                 </button>

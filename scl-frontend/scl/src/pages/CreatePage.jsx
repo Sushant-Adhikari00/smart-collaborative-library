@@ -1,5 +1,5 @@
-import { useState, useContext } from "react";
-import { XIcon, UploadIcon, LinkIcon } from "lucide-react";
+import { useState, useContext, useEffect } from "react";
+import { XIcon, UploadIcon, LinkIcon, TagIcon } from "lucide-react";
 import { useNavigate } from "react-router";
 import toast from "react-hot-toast";
 import api from "../lib/axios";
@@ -16,12 +16,31 @@ const CreatePage = () => {
   const [supabaseUrl, setSupabaseUrl] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const CATEGORY_ID = 1; // default category; extend with a dropdown when categories are added
+  // Category state
+  const [categories, setCategories] = useState([]);
+  const [categoryId, setCategoryId] = useState("");
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
+
+  useEffect(() => {
+    api
+      .get("/documents/categories")
+      .then((res) => {
+        const list = res.data?.data || [];
+        setCategories(list);
+        if (list.length > 0) setCategoryId(String(list[0].id));
+      })
+      .catch(() => {
+        // Fallback: keep empty — we'll block submit below
+        toast.error("Could not load categories");
+      })
+      .finally(() => setCategoriesLoading(false));
+  }, []);
 
   const handleUpload = async (e) => {
     e.preventDefault();
     if (!title.trim()) return toast.error("Title is required");
     if (!file) return toast.error("Please select a file");
+    if (!categoryId) return toast.error("Please select a category");
     if (!user) return toast.error("You must be logged in");
 
     const allowedTypes = [
@@ -42,10 +61,9 @@ const CreatePage = () => {
       formData.append("file", file);
       formData.append("title", title);
       formData.append("description", description);
-      formData.append("categoryId", CATEGORY_ID);
+      formData.append("categoryId", categoryId);
       formData.append("uploadedBy", user.username || user.email);
 
-      // Spring Boot: POST /api/v1/documents/upload
       await api.post("/documents/upload", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
@@ -68,7 +86,6 @@ const CreatePage = () => {
 
     setLoading(true);
     try {
-      // Spring Boot: POST /api/v1/ai/process-url { title, url, uploadedBy }
       await api.post("/ai/process-url", {
         title,
         url: supabaseUrl,
@@ -84,6 +101,41 @@ const CreatePage = () => {
       setLoading(false);
     }
   };
+
+  // Shared category picker rendered in both modes
+  const CategorySelect = () => (
+    <div className="form-control">
+      <label className="label">
+        <span className="label-text flex items-center gap-1.5">
+          <TagIcon className="size-3.5 text-primary" />
+          Category <span className="text-error">*</span>
+        </span>
+      </label>
+      {categoriesLoading ? (
+        <div className="skeleton h-12 w-full rounded-lg" />
+      ) : categories.length === 0 ? (
+        <div className="alert alert-warning text-sm py-2">
+          No categories found. Please ask your admin to add categories first.
+        </div>
+      ) : (
+        <select
+          className="select select-bordered w-full bg-base-200 focus:border-primary"
+          value={categoryId}
+          onChange={(e) => setCategoryId(e.target.value)}
+          required
+        >
+          <option value="" disabled>
+            Select a category...
+          </option>
+          {categories.map((cat) => (
+            <option key={cat.id} value={String(cat.id)}>
+              {cat.name}
+            </option>
+          ))}
+        </select>
+      )}
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-base-200 flex items-center justify-center p-4">
@@ -141,6 +193,9 @@ const CreatePage = () => {
                 onChange={(e) => setDescription(e.target.value)}
               />
             </div>
+
+            {/* Category Picker — shared by both modes */}
+            <CategorySelect />
           </div>
 
           {/* Upload Mode */}

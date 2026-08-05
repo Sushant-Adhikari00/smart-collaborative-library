@@ -4,16 +4,7 @@ import api from '../../lib/axios.js';
 import toast from 'react-hot-toast';
 
 const SharedAiTab = ({ documentId, title }) => {
-  const [messages, setMessages] = useState([
-    {
-      id: 1,
-      askedBy: 'Sushant Adhikari',
-      question: 'What are the main theoretical concepts covered in Chapter 2?',
-      answer: 'Chapter 2 focuses on three main principles: Distributed Consensus, Fault Tolerance, and Vector Clocks. Key formulas are presented on page 14.',
-      citations: [{ page: 14, text: 'Consensus proofs' }],
-      timestamp: '10:15 AM'
-    }
-  ]);
+  const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [copiedId, setCopiedId] = useState(null);
@@ -32,13 +23,15 @@ const SharedAiTab = ({ documentId, title }) => {
     setLoading(true);
 
     try {
-      const res = await api.post('/ai/chat', {
+      // Use the workspace endpoint — it queries the main document
+      // AND all collaborator-uploaded shared resources in one call
+      const res = await api.post('/ai/chat/workspace', {
         question,
         documentId
       });
 
       const answer = res.data?.data?.answer || res.data?.answer || "AI response generated for group.";
-      const citations = res.data?.data?.citations || [{ page: 5, text: "Section 2.1" }];
+      const citations = res.data?.data?.citations || [];
 
       const newMsg = {
         id: Date.now(),
@@ -52,7 +45,7 @@ const SharedAiTab = ({ documentId, title }) => {
       setMessages(prev => [...prev, newMsg]);
     } catch (err) {
       console.error("Shared AI error:", err);
-      toast.error("Failed to query Shared AI Assistant");
+      toast.error(err.response?.data?.message || "Failed to query Shared AI Assistant");
     } finally {
       setLoading(false);
     }
@@ -104,6 +97,20 @@ const SharedAiTab = ({ documentId, title }) => {
 
       {/* Synchronized Q&A List */}
       <div className="space-y-4 flex-1">
+        {messages.length === 0 && !loading && (
+          <div className="flex flex-col items-center justify-center py-12 text-center space-y-3">
+            <div className="p-4 rounded-2xl bg-secondary/10 text-secondary">
+              <BotIcon className="size-8" />
+            </div>
+            <div>
+              <p className="font-semibold text-sm text-base-content">No questions yet</p>
+              <p className="text-xs text-base-content/50 mt-1 max-w-xs">
+                Ask a question below — the AI will search the main document
+                and all files shared by collaborators.
+              </p>
+            </div>
+          </div>
+        )}
         {messages.map((item) => (
           <div key={item.id} className="bg-base-200/50 rounded-xl p-4 border border-base-300 space-y-3">
             {/* Question Header */}

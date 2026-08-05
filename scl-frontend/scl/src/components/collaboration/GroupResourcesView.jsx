@@ -119,14 +119,14 @@ export default function GroupResourcesView({ groupId, userRole, platformRole }) 
   return (
     <div className="space-y-6">
       {/* Top Controls */}
-      <div className="flex items-center justify-between bg-slate-900/60 p-4 rounded-xl border border-slate-800 backdrop-blur-md">
+      <div className="flex items-center justify-between bg-base-100 p-4 rounded-xl border border-base-300">
         <div>
-          <h3 className="text-lg font-semibold text-white">Group Academic Resources</h3>
-          <p className="text-xs text-slate-400">Share, verify notes, view AI summaries, and discuss course materials</p>
+          <h3 className="text-lg font-semibold text-base-content">Group Academic Resources</h3>
+          <p className="text-xs text-base-content/60">Share, verify notes, view AI summaries, and discuss course materials</p>
         </div>
         <button
           onClick={() => setShowUploadModal(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white text-sm font-medium rounded-xl shadow-lg transition"
+          className="btn btn-primary gap-2"
         >
           <Upload className="w-4 h-4" />
           <span>Upload Resource</span>
@@ -135,14 +135,14 @@ export default function GroupResourcesView({ groupId, userRole, platformRole }) 
 
       {/* Resource Grid */}
       {loading ? (
-        <div className="flex justify-center p-12 text-slate-400">
-          <span className="loading loading-spinner loading-lg text-indigo-500" />
+        <div className="flex justify-center p-12 text-base-content/60">
+          <span className="loading loading-spinner loading-lg text-primary" />
         </div>
       ) : resources.length === 0 ? (
-        <div className="text-center p-12 bg-slate-900/40 rounded-2xl border border-slate-800 text-slate-400 space-y-3">
-          <FileText className="w-12 h-12 mx-auto text-slate-600" />
+        <div className="text-center p-12 bg-base-100 rounded-2xl border border-base-300 text-base-content/70 space-y-3">
+          <FileText className="w-12 h-12 mx-auto text-base-content/30" />
           <p className="text-base font-medium">No resources shared yet</p>
-          <p className="text-xs text-slate-500">Upload PDF, DOCX, PPT, CSV, Images, or Video notes to collaborate.</p>
+          <p className="text-xs text-base-content/50">Upload PDF, DOCX, PPT, CSV, Images, or Video notes to collaborate.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -151,20 +151,20 @@ export default function GroupResourcesView({ groupId, userRole, platformRole }) 
               key={res.id}
               className={`p-5 rounded-2xl border transition-all ${
                 res.isPinned
-                  ? 'bg-gradient-to-br from-indigo-950/40 to-slate-900 border-indigo-500/50 shadow-indigo-950/30'
-                  : 'bg-slate-900/70 border-slate-800 hover:border-slate-700'
+                  ? 'bg-gradient-to-br from-primary/10 to-base-100 border-primary shadow-sm'
+                  : 'bg-base-100 border-base-300 hover:border-primary/40'
               }`}
             >
               {/* Badges Bar */}
               <div className="flex items-center justify-between gap-2 mb-3">
                 <div className="flex items-center gap-2">
                   {res.isPinned && (
-                    <span className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                    <span className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-primary/20 text-primary border border-primary/30">
                       <Pin className="w-3 h-3" /> PINNED
                     </span>
                   )}
                   {res.isVerified && (
-                    <span className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                    <span className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-success/20 text-success-content border border-success/30">
                       <CheckCircle2 className="w-3 h-3" /> TEACHER VERIFIED
                     </span>
                   )}
@@ -177,8 +177,8 @@ export default function GroupResourcesView({ groupId, userRole, platformRole }) 
                     title="Toggle Teacher Verification"
                     className={`text-xs font-medium px-2.5 py-1 rounded-lg border transition ${
                       res.isVerified
-                        ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
-                        : 'bg-slate-800 text-slate-400 border-slate-700 hover:text-white'
+                        ? 'bg-success/20 text-success-content border-success/40'
+                        : 'bg-base-200 text-base-content/70 border-base-300 hover:text-base-content'
                     }`}
                   >
                     {res.isVerified ? 'Verified' : 'Verify Note'}
@@ -188,36 +188,36 @@ export default function GroupResourcesView({ groupId, userRole, platformRole }) 
 
               {/* Title & Info */}
               <div className="flex items-start gap-3 mb-3">
-                <div className="p-2.5 rounded-xl bg-slate-800/80 border border-slate-700/60 shrink-0">
+                <div className="p-2.5 rounded-xl bg-base-200 border border-base-300 shrink-0">
                   {getFileIcon(res.fileType)}
                 </div>
                 <div>
-                  <h4 className="text-base font-semibold text-white leading-snug">{res.title}</h4>
-                  <p className="text-xs text-slate-400 line-clamp-2 mt-1">{res.description || res.fileName}</p>
+                  <h4 className="text-base font-semibold text-base-content leading-snug">{res.title}</h4>
+                  <p className="text-xs text-base-content/70 line-clamp-2 mt-1">{res.description || res.fileName}</p>
                 </div>
               </div>
 
               {/* Uploader & Date */}
-              <div className="text-xs text-slate-500 mb-4 flex items-center justify-between border-t border-b border-slate-800/80 py-2">
+              <div className="text-xs text-base-content/50 mb-4 flex items-center justify-between border-t border-b border-base-300 py-2">
                 <span>Uploaded by <strong className="text-slate-300">{res.uploaderName}</strong></span>
                 <span>{new Date(res.uploadedAt).toLocaleDateString()}</span>
               </div>
 
               {/* AI Summary Preview Button */}
               {res.aiSummary && (
-                <div className="mb-4 p-3 rounded-xl bg-purple-950/30 border border-purple-500/20">
+                <div className="mb-4 p-3 rounded-xl bg-secondary/10 border border-secondary/20">
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs font-semibold text-purple-300 flex items-center gap-1">
-                      <Sparkles className="w-3.5 h-3.5 text-purple-400" /> AI Summary
+                    <span className="text-xs font-semibold text-secondary flex items-center gap-1">
+                      <Sparkles className="w-3.5 h-3.5 text-secondary" /> AI Summary
                     </span>
                     <button
                       onClick={() => setSelectedResourceForAi(res)}
-                      className="text-[11px] text-purple-400 hover:text-purple-200 underline font-medium"
+                      className="text-[11px] text-secondary hover:text-secondary-focus underline font-medium"
                     >
                       View Full AI Note
                     </button>
                   </div>
-                  <p className="text-xs text-slate-300 line-clamp-2 italic">"{res.aiSummary}"</p>
+                  <p className="text-xs text-base-content/85 line-clamp-2 italic">"{res.aiSummary}"</p>
                 </div>
               )}
 
@@ -228,17 +228,17 @@ export default function GroupResourcesView({ groupId, userRole, platformRole }) 
                     href={res.fileUrl}
                     target="_blank"
                     rel="noreferrer"
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-medium text-slate-200 border border-slate-700 transition"
+                    className="btn btn-xs btn-outline btn-neutral"
                   >
-                    <Download className="w-3.5 h-3.5 text-indigo-400" />
+                    <Download className="w-3.5 h-3.5 text-primary" />
                     <span>Download</span>
                   </a>
 
                   <button
                     onClick={() => setActiveDiscussionResourceId(res.id)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-medium text-slate-200 border border-slate-700 transition"
+                    className="btn btn-xs btn-outline btn-neutral"
                   >
-                    <MessageSquare className="w-3.5 h-3.5 text-purple-400" />
+                    <MessageSquare className="w-3.5 h-3.5 text-secondary" />
                     <span>Comments ({res.commentCount || 0})</span>
                   </button>
                 </div>
@@ -246,14 +246,14 @@ export default function GroupResourcesView({ groupId, userRole, platformRole }) 
                 <div className="flex items-center gap-1">
                   <button
                     onClick={() => handleTogglePin(res.id)}
-                    className="p-1.5 text-slate-400 hover:text-indigo-400 transition"
+                    className="btn btn-ghost btn-circle btn-xs text-base-content/60 hover:text-primary"
                     title="Pin Resource"
                   >
-                    <Pin className={`w-4 h-4 ${res.isPinned ? 'text-indigo-400 fill-indigo-400' : ''}`} />
+                    <Pin className={`w-4 h-4 ${res.isPinned ? 'text-primary fill-primary' : ''}`} />
                   </button>
                   <button
                     onClick={() => handleDelete(res.id)}
-                    className="p-1.5 text-slate-400 hover:text-rose-400 transition"
+                    className="btn btn-ghost btn-circle btn-xs text-error/60 hover:text-error"
                     title="Delete Resource"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -268,40 +268,40 @@ export default function GroupResourcesView({ groupId, userRole, platformRole }) 
       {/* Upload Modal */}
       {showUploadModal && (
         <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-lg p-6 shadow-2xl space-y-4">
-            <h3 className="text-xl font-bold text-white flex items-center gap-2">
-              <Upload className="w-5 h-5 text-indigo-400" /> Upload Study Resource
+          <div className="bg-base-100 border border-base-300 rounded-2xl w-full max-w-lg p-6 shadow-2xl space-y-4 text-base-content">
+            <h3 className="text-xl font-bold text-base-content flex items-center gap-2">
+              <Upload className="w-5 h-5 text-primary" /> Upload Study Resource
             </h3>
 
             <form onSubmit={handleUpload} className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">Title</label>
+                <label className="block text-xs font-semibold text-base-content/75 mb-1">Title</label>
                 <input
                   type="text"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="e.g. Chapter 3 DBMS Lecture Notes"
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500"
+                  className="input input-bordered w-full bg-base-200"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">Description</label>
+                <label className="block text-xs font-semibold text-base-content/75 mb-1">Description</label>
                 <textarea
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="Briefly describe what this note covers..."
                   rows={3}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500"
+                  className="textarea textarea-bordered w-full bg-base-200"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">File (PDF, DOCX, XLS, PPT, PNG, MP4)</label>
+                <label className="block text-xs font-semibold text-base-content/75 mb-1">File (PDF, DOCX, XLS, PPT, PNG, MP4)</label>
                 <input
                   type="file"
                   onChange={(e) => setFile(e.target.files[0])}
-                  className="file-input file-input-bordered file-input-primary w-full bg-slate-950 text-slate-300 text-sm"
+                  className="file-input file-input-bordered file-input-primary w-full bg-base-200 text-sm"
                 />
               </div>
 
@@ -309,16 +309,16 @@ export default function GroupResourcesView({ groupId, userRole, platformRole }) 
                 <button
                   type="button"
                   onClick={() => setShowUploadModal(false)}
-                  className="px-4 py-2 rounded-xl text-sm font-medium text-slate-400 hover:text-white"
+                  className="btn btn-ghost"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={uploading}
-                  className="px-5 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white text-sm font-medium rounded-xl shadow-lg disabled:opacity-50"
+                  className="btn btn-primary"
                 >
-                  {uploading ? 'Processing AI...' : 'Upload Resource'}
+                  {uploading ? <span className="loading loading-spinner" /> : 'Upload Resource'}
                 </button>
               </div>
             </form>
@@ -329,24 +329,24 @@ export default function GroupResourcesView({ groupId, userRole, platformRole }) 
       {/* AI Full Summary Modal */}
       {selectedResourceForAi && (
         <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-purple-500/40 rounded-2xl w-full max-w-2xl p-6 shadow-2xl space-y-4 max-h-[80vh] overflow-y-auto">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-              <h3 className="text-xl font-bold text-purple-200 flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-purple-400" /> AI Generated Summary & Insights
+          <div className="bg-base-100 border border-base-300 rounded-2xl w-full max-w-2xl p-6 shadow-2xl space-y-4 max-h-[80vh] overflow-y-auto text-base-content">
+            <div className="flex items-center justify-between border-b border-base-300 pb-3">
+              <h3 className="text-xl font-bold text-secondary flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-secondary" /> AI Generated Summary & Insights
               </h3>
-              <button onClick={() => setSelectedResourceForAi(null)} className="text-slate-400 hover:text-white text-sm font-bold">
+              <button onClick={() => setSelectedResourceForAi(null)} className="btn btn-ghost btn-circle btn-sm">
                 ✕
               </button>
             </div>
 
-            <div className="space-y-4 text-sm text-slate-300">
+            <div className="space-y-4 text-sm">
               <div>
-                <h4 className="font-semibold text-white text-base mb-1">{selectedResourceForAi.title}</h4>
-                <p className="text-xs text-slate-400">{selectedResourceForAi.fileName}</p>
+                <h4 className="font-semibold text-base-content text-base mb-1">{selectedResourceForAi.title}</h4>
+                <p className="text-xs text-base-content/50">{selectedResourceForAi.fileName}</p>
               </div>
 
-              <div className="p-4 rounded-xl bg-purple-950/40 border border-purple-500/30 space-y-2">
-                <h5 className="font-semibold text-purple-300 text-xs uppercase tracking-wider">Executive Summary</h5>
+              <div className="p-4 rounded-xl bg-secondary/5 border border-secondary/20 space-y-2">
+                <h5 className="font-semibold text-secondary text-xs uppercase tracking-wider">Executive Summary</h5>
                 <p className="leading-relaxed">{selectedResourceForAi.aiSummary}</p>
               </div>
             </div>

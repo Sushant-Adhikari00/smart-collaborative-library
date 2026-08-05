@@ -92,6 +92,24 @@ export const collaborationApi = {
     return res.data.data;
   },
 
+  // Document resources (for Document Workspace Modal)
+  getDocumentResources: async (documentId) => {
+    const res = await api.get(`/collaboration/documents/${documentId}/resources`);
+    return res.data.data;
+  },
+
+  uploadDocumentResource: async (documentId, formData) => {
+    const res = await api.post(`/collaboration/documents/${documentId}/resources`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return res.data.data;
+  },
+
+  deleteDocumentResource: async (documentId, resourceId) => {
+    const res = await api.delete(`/collaboration/documents/${documentId}/resources/${resourceId}`);
+    return res.data.data;
+  },
+
   // Resource Comments
   getResourceComments: async (resourceId) => {
     const res = await api.get(`/collaboration/resources/${resourceId}/comments`);
