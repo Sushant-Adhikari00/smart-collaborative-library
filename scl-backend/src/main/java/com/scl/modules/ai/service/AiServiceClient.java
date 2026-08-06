@@ -48,4 +48,17 @@ public class AiServiceClient {
                 .bodyToMono(AiChatResponse.class)
                 .block();
     }
+
+    public AiChatResponse chatMulti(String question, java.util.List<String> documentIds) {
+        return aiWebClient.post()
+                .uri("/ai/chat-multi")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(java.util.Map.of(
+                    "question", question,
+                    "document_ids", documentIds
+                ))
+                .retrieve()
+                .bodyToMono(AiChatResponse.class)
+                .block();
+    }
 }

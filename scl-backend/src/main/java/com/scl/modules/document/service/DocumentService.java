@@ -21,4 +21,8 @@ public interface DocumentService {
     ApiResponse<?> deleteDocument(Long id, String requesterEmail);
 
     ApiResponse<?> shareDocument(com.scl.modules.document.dto.DocumentShareRequest request);
+
+    ApiResponse<?> reprocessDocument(Long id);
+
+    ApiResponse<?> reprocessAllDocuments();
 }

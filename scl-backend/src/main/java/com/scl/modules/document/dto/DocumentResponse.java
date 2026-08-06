@@ -23,4 +23,8 @@ public class DocumentResponse {
     private String aiSummary;
     private String extractedText;
     private Integer chunksCount;
+    private String aiKeyPoints;
+    private String aiKeywords;
+
+    private Long commentCount;
 }

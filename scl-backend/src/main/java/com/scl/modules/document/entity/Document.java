@@ -58,4 +58,10 @@ public class Document {
 
     @Column(name = "chunks_count")
     private Integer chunksCount;
+
+    @Column(name = "ai_key_points", columnDefinition = "TEXT")
+    private String aiKeyPoints;
+
+    @Column(name = "ai_keywords", columnDefinition = "TEXT")
+    private String aiKeywords;
 }

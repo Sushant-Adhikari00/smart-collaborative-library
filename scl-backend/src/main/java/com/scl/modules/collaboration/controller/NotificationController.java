@@ -36,6 +36,13 @@ public class NotificationController {
         return ResponseEntity.ok(ApiResponse.success("Notification marked as read", "Marked notification " + notificationId));
     }
 
+    @PatchMapping("/read-all")
+    public ResponseEntity<ApiResponse<String>> markAllAsRead(Authentication authentication) {
+        User user = getAuthenticatedUser(authentication);
+        notificationService.markAllAsRead(user.getId());
+        return ResponseEntity.ok(ApiResponse.success("All notifications marked as read", null));
+    }
+
     private User getAuthenticatedUser(Authentication authentication) {
         return userRepository.findByEmail(authentication.getName())
                 .orElseThrow(() -> new RuntimeException("Authenticated user not found: " + authentication.getName()));

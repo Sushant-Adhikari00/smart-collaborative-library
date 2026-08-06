@@ -179,3 +179,77 @@ async def chat(request: ChatRequest):
             status_code=500,
             detail=f"Chat processing failed: {str(e)}",
         )
+
+
+class ChatMultiRequest(BaseModel):
+    question: str
+    document_ids: list[str]
+
+
+@router.post("/ai/chat-multi", response_model=ChatResponse)
+async def chat_multi(request: ChatMultiRequest):
+    """
+    Ask a question across multiple documents (main doc + shared resources).
+
+    Retrieves relevant chunks from all provided document IDs, merges them,
+    and generates a single unified answer. Used by the Shared AI workspace tab.
+    """
+    from app.main import retriever, llm_generator
+    from app.config import settings
+
+    if not request.question.strip():
+        raise HTTPException(status_code=400, detail="Question cannot be empty")
+
+    if not request.document_ids:
+        raise HTTPException(status_code=400, detail="At least one document_id is required")
+
+    try:
+        # Retrieve chunks from each document ID and merge them
+        all_chunks: list[str] = []
+        for doc_id in request.document_ids:
+            if not doc_id:
+                continue
+            chunks = retriever.retrieve(
+                request.question,
+                doc_id,
+                top_k=settings.FAISS_TOP_K,
+            )
+            all_chunks.extend(chunks)
+
+        if not all_chunks:
+            return ChatResponse(
+                answer=(
+                    "No relevant content found across the workspace documents. "
+                    "Make sure documents have been uploaded and processed by the AI service."
+                ),
+                sources=[],
+            )
+
+        # Deduplicate identical chunks that may exist across docs
+        seen: set[str] = set()
+        unique_chunks: list[str] = []
+        for chunk in all_chunks:
+            if chunk not in seen:
+                seen.add(chunk)
+                unique_chunks.append(chunk)
+
+        # Combine into context (cap at top_k * 2 chunks to avoid token overflow)
+        max_chunks = settings.FAISS_TOP_K * 2
+        context = "\n\n".join(unique_chunks[:max_chunks])
+
+        # Generate answer
+        answer = llm_generator.generate(request.question, context)
+
+        return ChatResponse(
+            answer=answer,
+            sources=unique_chunks[:max_chunks],
+        )
+
+    except (ConnectionError, TimeoutError) as e:
+        raise HTTPException(status_code=503, detail=str(e))
+    except Exception as e:
+        logger.error(f"Multi-doc chat failed: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=500,
+            detail=f"Chat processing failed: {str(e)}",
+        )

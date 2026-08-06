@@ -991,7 +991,7 @@ This step converts the system into a **production-ready AI backend service**.
 
 The system now behaves like:
 
-> ChatPDF / NotebookLM style API service
+> Doc-grounded QA and study assistant API service
 
 ---
 

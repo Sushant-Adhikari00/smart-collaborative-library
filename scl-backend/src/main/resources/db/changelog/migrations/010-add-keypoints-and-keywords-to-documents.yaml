@@ -1,0 +1,14 @@
+databaseChangeLog:
+  - changeSet:
+      id: add-keypoints-and-keywords-to-documents
+      author: antigravity
+      changes:
+        - addColumn:
+            tableName: documents
+            columns:
+              - column:
+                  name: ai_key_points
+                  type: text
+              - column:
+                  name: ai_keywords
+                  type: text

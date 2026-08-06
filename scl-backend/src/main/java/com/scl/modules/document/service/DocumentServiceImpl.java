@@ -12,6 +12,7 @@ import com.scl.modules.document.entity.DocumentStatus;
 import com.scl.modules.document.repository.CategoryRepository;
 import com.scl.modules.document.repository.DocumentRepository;
 import com.scl.modules.document.entity.DocumentShare;
+import com.scl.modules.document.repository.DocumentCommentRepository;
 import com.scl.modules.document.repository.DocumentShareRepository;
 import com.scl.modules.document.dto.DocumentShareRequest;
 import com.scl.modules.auth.repository.UserRepository;
@@ -48,6 +49,7 @@ public class DocumentServiceImpl implements DocumentService {
     private final DocumentRatingRepository documentRatingRepository;
     private final CollaborationRequestRepository collaborationRequestRepository;
     private final UserRepository userRepository;
+    private final DocumentCommentRepository documentCommentRepository;
 
     // ─────────────────────────────────────────────────────────────────
     // UPLOAD
@@ -95,7 +97,15 @@ public class DocumentServiceImpl implements DocumentService {
 
             // 3. Update the document with AI results if successful
             if (aiResponse != null) {
-                saved.setAiSummary(aiResponse.getSummary());
+                if (aiResponse.getSummary() != null) {
+                    saved.setAiSummary(aiResponse.getSummary().getSummary());
+                    if (aiResponse.getSummary().getKey_points() != null) {
+                        saved.setAiKeyPoints(String.join("\n", aiResponse.getSummary().getKey_points()));
+                    }
+                    if (aiResponse.getSummary().getKeywords() != null) {
+                        saved.setAiKeywords(String.join(", ", aiResponse.getSummary().getKeywords()));
+                    }
+                }
                 saved.setExtractedText(aiResponse.getText());
                 saved.setChunksCount(aiResponse.getChunks_count());
                 saved = documentRepository.save(saved);
@@ -338,6 +348,98 @@ public class DocumentServiceImpl implements DocumentService {
     }
 
     // ─────────────────────────────────────────────────────────────────
+    // REPROCESS — Re-run AI pipeline for existing documents
+    // ─────────────────────────────────────────────────────────────────
+    @Override
+    @Transactional
+    public ApiResponse<?> reprocessDocument(Long id) {
+        try {
+            Optional<Document> docOpt = documentRepository.findById(id);
+            if (docOpt.isEmpty()) {
+                return ApiResponse.error("Document not found with id: " + id);
+            }
+            Document doc = docOpt.get();
+            if (doc.getFileUrl() == null || doc.getFileUrl().isBlank()) {
+                return ApiResponse.error("Document has no file URL to reprocess");
+            }
+
+            logger.info("Reprocessing document id={} via AI service", id);
+            AiProcessResponse aiResponse = aiServiceClient.processDocumentByUrl(
+                    doc.getFileUrl(), doc.getId().toString());
+
+            if (aiResponse != null && aiResponse.getSummary() != null) {
+                doc.setAiSummary(aiResponse.getSummary().getSummary());
+                if (aiResponse.getSummary().getKey_points() != null) {
+                    doc.setAiKeyPoints(String.join("\n", aiResponse.getSummary().getKey_points()));
+                }
+                if (aiResponse.getSummary().getKeywords() != null) {
+                    doc.setAiKeywords(String.join(", ", aiResponse.getSummary().getKeywords()));
+                }
+            }
+            if (aiResponse != null) {
+                doc.setExtractedText(aiResponse.getText());
+                doc.setChunksCount(aiResponse.getChunks_count());
+            }
+            documentRepository.save(doc);
+            logger.info("Document id={} reprocessed successfully", id);
+
+            return ApiResponse.success("Document reprocessed successfully", mapToResponse(doc));
+        } catch (Exception e) {
+            logger.error("Error reprocessing document {}: {}", id, e.getMessage(), e);
+            return ApiResponse.error("Failed to reprocess document: " + e.getMessage());
+        }
+    }
+
+    @Override
+    @Transactional
+    public ApiResponse<?> reprocessAllDocuments() {
+        try {
+            List<Document> allDocs = documentRepository.findAll();
+            int success = 0;
+            int failed = 0;
+
+            for (Document doc : allDocs) {
+                if (doc.getFileUrl() == null || doc.getFileUrl().isBlank()) {
+                    failed++;
+                    continue;
+                }
+                try {
+                    logger.info("Reprocessing document id={}", doc.getId());
+                    AiProcessResponse aiResponse = aiServiceClient.processDocumentByUrl(
+                            doc.getFileUrl(), doc.getId().toString());
+
+                    if (aiResponse != null && aiResponse.getSummary() != null) {
+                        doc.setAiSummary(aiResponse.getSummary().getSummary());
+                        if (aiResponse.getSummary().getKey_points() != null) {
+                            doc.setAiKeyPoints(String.join("\n", aiResponse.getSummary().getKey_points()));
+                        }
+                        if (aiResponse.getSummary().getKeywords() != null) {
+                            doc.setAiKeywords(String.join(", ", aiResponse.getSummary().getKeywords()));
+                        }
+                    }
+                    if (aiResponse != null) {
+                        doc.setExtractedText(aiResponse.getText());
+                        doc.setChunksCount(aiResponse.getChunks_count());
+                    }
+                    documentRepository.save(doc);
+                    success++;
+                } catch (Exception e) {
+                    logger.error("Failed to reprocess document id={}: {}", doc.getId(), e.getMessage());
+                    failed++;
+                }
+            }
+
+            String message = String.format("Reprocessed %d documents successfully, %d failed (out of %d total)",
+                    success, failed, allDocs.size());
+            logger.info(message);
+            return ApiResponse.success(message, null);
+        } catch (Exception e) {
+            logger.error("Error reprocessing all documents: {}", e.getMessage(), e);
+            return ApiResponse.error("Failed to reprocess documents: " + e.getMessage());
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────────
     // PRIVATE HELPER — Entity -> DTO mapping
     // ─────────────────────────────────────────────────────────────────
     private DocumentResponse mapToResponse(Document document) {
@@ -358,6 +460,15 @@ public class DocumentServiceImpl implements DocumentService {
         response.setAiSummary(document.getAiSummary());
         response.setExtractedText(document.getExtractedText());
         response.setChunksCount(document.getChunksCount());
+        response.setAiKeyPoints(document.getAiKeyPoints());
+        response.setAiKeywords(document.getAiKeywords());
+        
+        // Comment count
+        if (document.getId() != null) {
+            response.setCommentCount(documentCommentRepository.countByDocumentId(document.getId().longValue()));
+        } else {
+            response.setCommentCount(0L);
+        }
         
         return response;
     }

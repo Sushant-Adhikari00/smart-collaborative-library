@@ -70,6 +70,11 @@ public class NotificationService {
         });
     }
 
+    @Transactional
+    public void markAllAsRead(Long userId) {
+        notificationRepository.markAllAsReadByRecipientId(userId);
+    }
+
     private NotificationResponse mapToResponse(Notification notification) {
         return NotificationResponse.builder()
                 .id(notification.getId())

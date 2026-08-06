@@ -4,6 +4,7 @@ import com.scl.common.ApiResponse;
 import com.scl.modules.document.dto.DocumentShareRequest;
 import com.scl.modules.document.dto.DocumentUpdateRequest;
 import com.scl.modules.document.dto.DocumentUploadRequest;
+import com.scl.modules.document.repository.CategoryRepository;
 import com.scl.modules.document.service.DocumentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -34,6 +35,7 @@ import java.nio.file.Paths;
 public class DocumentController {
 
     private final DocumentService documentService;
+    private final CategoryRepository categoryRepository;
 
     @Value("${app.upload.dir:uploads/documents}")
     private String uploadDir;
@@ -99,6 +101,11 @@ public class DocumentController {
                 : ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
     }
 
+    @GetMapping("/categories")
+    public ResponseEntity<ApiResponse<?>> getAllCategories() {
+        return ResponseEntity.ok(ApiResponse.success("Categories fetched", categoryRepository.findAll()));
+    }
+
     @GetMapping("/uploaded-by/{uploadedBy}")
     public ResponseEntity<ApiResponse<?>> getDocumentsByUploadedBy(@PathVariable String uploadedBy) {
         ApiResponse<?> response = documentService.getDocumentsByUploadedBy(uploadedBy);
@@ -142,6 +149,22 @@ public class DocumentController {
         return response.isSuccess()
                 ? ResponseEntity.ok(response)
                 : ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+
+    @PostMapping("/{id}/reprocess")
+    public ResponseEntity<ApiResponse<?>> reprocessDocument(@PathVariable Long id) {
+        ApiResponse<?> response = documentService.reprocessDocument(id);
+        return response.isSuccess()
+                ? ResponseEntity.ok(response)
+                : ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+
+    @PostMapping("/reprocess-all")
+    public ResponseEntity<ApiResponse<?>> reprocessAllDocuments() {
+        ApiResponse<?> response = documentService.reprocessAllDocuments();
+        return response.isSuccess()
+                ? ResponseEntity.ok(response)
+                : ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
     }
 
     private String detectContentType(String filename) {

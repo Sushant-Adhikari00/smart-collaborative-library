@@ -1,0 +1,78 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1-create-document-resources-table
+      author: antigravity
+      changes:
+        - createTable:
+            tableName: document_resources
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: document_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: uploader_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: title
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: description
+                  type: TEXT
+              - column:
+                  name: file_name
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: file_url
+                  type: VARCHAR(500)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: file_type
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: file_size
+                  type: BIGINT
+              - column:
+                  name: ai_summary
+                  type: TEXT
+              - column:
+                  name: ai_key_points
+                  type: TEXT
+              - column:
+                  name: ai_keywords
+                  type: TEXT
+              - column:
+                  name: uploaded_at
+                  type: TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP
+        - addForeignKeyConstraint:
+            baseTableName: document_resources
+            baseColumnNames: document_id
+            constraintName: fk_doc_resources_document
+            referencedTableName: documents
+            referencedColumnNames: id
+            onDelete: CASCADE
+        - addForeignKeyConstraint:
+            baseTableName: document_resources
+            baseColumnNames: uploader_id
+            constraintName: fk_doc_resources_uploader
+            referencedTableName: users
+            referencedColumnNames: id
+            onDelete: CASCADE

@@ -16,3 +16,4 @@ public class SclApplication {
         SpringApplication.run(SclApplication.class, args);
     }
 }
+

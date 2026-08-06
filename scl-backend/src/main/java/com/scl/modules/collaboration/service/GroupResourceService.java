@@ -70,7 +70,15 @@ public class GroupResourceService {
         try {
             AiProcessResponse aiResponse = aiServiceClient.processDocumentByUrl(fileUrl, savedResource.getId().toString());
             if (aiResponse != null) {
-                savedResource.setAiSummary(aiResponse.getSummary());
+                if (aiResponse.getSummary() != null) {
+                    savedResource.setAiSummary(aiResponse.getSummary().getSummary());
+                    if (aiResponse.getSummary().getKey_points() != null) {
+                        savedResource.setAiKeyPoints(String.join("\n", aiResponse.getSummary().getKey_points()));
+                    }
+                    if (aiResponse.getSummary().getKeywords() != null) {
+                        savedResource.setAiKeywords(String.join(", ", aiResponse.getSummary().getKeywords()));
+                    }
+                }
                 savedResource = resourceRepository.save(savedResource);
             }
         } catch (Exception e) {

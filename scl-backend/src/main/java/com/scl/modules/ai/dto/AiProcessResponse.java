@@ -5,7 +5,7 @@ import lombok.Data;
 @Data
 public class AiProcessResponse {
     private String text;
-    private String summary;
+    private AiSummaryResponse summary;
     private String type;
     private Integer chunks_count;
 }

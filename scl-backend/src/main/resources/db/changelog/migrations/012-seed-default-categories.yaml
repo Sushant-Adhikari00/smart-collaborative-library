@@ -1,0 +1,36 @@
+databaseChangeLog:
+  - changeSet:
+      id: 012-seed-default-categories
+      author: sudeep
+      context: dev
+      # Only inserts if the category doesn't already exist (idempotent)
+      changes:
+        - insert:
+            tableName: category
+            columns:
+              - column:
+                  name: name
+                  value: Lecture Notes
+        - insert:
+            tableName: category
+            columns:
+              - column:
+                  name: name
+                  value: Research Papers
+        - insert:
+            tableName: category
+            columns:
+              - column:
+                  name: name
+                  value: Study Guides
+        - insert:
+            tableName: category
+            columns:
+              - column:
+                  name: name
+                  value: Lab Reports
+
+      rollback:
+        - delete:
+            tableName: category
+            where: name IN ('Lecture Notes', 'Research Papers', 'Study Guides', 'Lab Reports')
