@@ -1,26 +1,51 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { 
-  ZoomInIcon, 
-  ZoomOutIcon, 
   MaximizeIcon, 
-  SearchIcon, 
   ChevronLeftIcon, 
-  ChevronRightIcon, 
-  FileTextIcon, 
-  DownloadIcon
+  ChevronRightIcon,
+  FileTextIcon
 } from 'lucide-react';
 
 const PdfViewer = ({ fileUrl, title }) => {
-  const [zoom, setZoom] = useState(100);
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(12);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [totalPages, setTotalPages] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [isFullScreen, setIsFullScreen] = useState(false);
   const containerRef = useRef(null);
 
-  const handleZoomIn = () => setZoom(prev => Math.min(prev + 15, 200));
-  const handleZoomOut = () => setZoom(prev => Math.max(prev - 15, 50));
+  // Fetch the PDF binary stream and parse the page count dynamically using PDF metadata tags
+  useEffect(() => {
+    if (!fileUrl) return;
+    setIsLoading(true);
+    fetch(fileUrl)
+      .then(res => res.arrayBuffer())
+      .then(buffer => {
+        const text = new TextDecoder('utf-8').decode(new Uint8Array(buffer));
+        
+        // Match /Count metadata tag inside pages catalog
+        const countMatches = text.match(/\/Count\s+(\d+)/g);
+        if (countMatches) {
+          let maxCount = 1;
+          for (const m of countMatches) {
+            const num = parseInt(m.match(/\d+/)[0], 10);
+            if (num > maxCount) maxCount = num;
+          }
+          setTotalPages(maxCount);
+        } else {
+          // Fallback: match /Type /Page objects count
+          const pageMatches = text.match(/\/Type\s*\/Page\b/g);
+          if (pageMatches) {
+            setTotalPages(pageMatches.length);
+          }
+        }
+      })
+      .catch(err => {
+        console.error("Error reading PDF page count:", err);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
+  }, [fileUrl]);
 
   const toggleFullScreen = () => {
     if (!containerRef.current) return;
@@ -38,81 +63,71 @@ const PdfViewer = ({ fileUrl, title }) => {
   return (
     <div ref={containerRef} className="flex flex-col h-full bg-base-300 rounded-xl overflow-hidden border border-base-300">
       {/* Viewer Toolbar */}
-      <div className="bg-base-200 border-b border-base-300 px-4 py-2 flex flex-wrap items-center justify-between gap-3 text-sm shrink-0">
-        {/* Left: Page navigation */}
-        <div className="flex items-center gap-2">
-          <button 
-            disabled={currentPage <= 1} 
-            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-            className="btn btn-ghost btn-xs btn-square"
-            title="Previous Page"
-          >
-            <ChevronLeftIcon className="size-4" />
-          </button>
-          <span className="text-xs font-medium text-base-content/80">
-            Page <input 
-              type="number" 
-              value={currentPage} 
-              onChange={(e) => setCurrentPage(Number(e.target.value))} 
-              className="w-10 text-center bg-base-100 border border-base-300 rounded text-xs py-0.5" 
-            /> of {totalPages}
-          </span>
-          <button 
-            disabled={currentPage >= totalPages} 
-            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-            className="btn btn-ghost btn-xs btn-square"
-            title="Next Page"
-          >
-            <ChevronRightIcon className="size-4" />
-          </button>
-        </div>
+      <div className="bg-base-200 border-b border-base-300 px-4 py-2 flex items-center justify-between gap-3 text-sm shrink-0">
+        {/* Left: Document Title */}
+        <span className="font-semibold text-xs text-base-content/80 truncate max-w-[120px] md:max-w-xs">
+          {title || "Document Preview"}
+        </span>
 
-        {/* Middle: Search inside PDF */}
-        <div className="relative flex-1 max-w-xs">
-          <input 
-            type="text" 
-            placeholder="Search inside PDF..." 
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="input input-xs input-bordered w-full pr-7 bg-base-100 text-xs"
-          />
-          <SearchIcon className="size-3.5 absolute right-2 top-2 text-base-content/40" />
-        </div>
-
-        {/* Right: Zoom & Actions */}
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1 bg-base-100 px-2 py-0.5 rounded border border-base-300">
-            <button onClick={handleZoomOut} className="hover:text-primary" title="Zoom Out">
-              <ZoomOutIcon className="size-3.5" />
+        {/* Middle: Page navigation controls */}
+        {!isLoading && fileUrl && (
+          <div className="flex items-center gap-2">
+            <button 
+              disabled={currentPage <= 1} 
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              className="btn btn-ghost btn-xs btn-square"
+              title="Previous Page"
+            >
+              <ChevronLeftIcon className="size-4" />
             </button>
-            <span className="text-xs font-medium w-9 text-center">{zoom}%</span>
-            <button onClick={handleZoomIn} className="hover:text-primary" title="Zoom In">
-              <ZoomInIcon className="size-3.5" />
+            <span className="text-[11px] font-medium text-base-content/85">
+              Page <input 
+                type="number" 
+                min="1"
+                max={totalPages}
+                value={currentPage} 
+                onChange={(e) => {
+                  const val = Number(e.target.value);
+                  if (val >= 1 && val <= totalPages) setCurrentPage(val);
+                }} 
+                className="w-8 text-center bg-base-100 border border-base-300 rounded py-0.5 font-bold" 
+              /> of {totalPages}
+            </span>
+            <button 
+              disabled={currentPage >= totalPages} 
+              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+              className="btn btn-ghost btn-xs btn-square"
+              title="Next Page"
+            >
+              <ChevronRightIcon className="size-4" />
             </button>
           </div>
+        )}
 
+        {/* Right: Fullscreen Actions */}
+        <div className="flex items-center gap-2">
           <button onClick={toggleFullScreen} className="btn btn-ghost btn-xs btn-square" title="Full Screen">
             <MaximizeIcon className="size-4" />
           </button>
-          {/* Fullscreen toggle */}
         </div>
       </div>
 
-      {/* Main Canvas / Frame View */}
-      <div className="flex-1 overflow-auto p-4 flex justify-center bg-base-300/60 relative">
+      {/* Main Canvas - Set to overflow-hidden and full height to prevent double scrollbars */}
+      <div className="flex-1 overflow-hidden p-4 flex justify-center bg-base-300/60 relative h-full">
         {isLoading ? (
           <div className="flex flex-col items-center justify-center h-full gap-3 text-base-content/60">
             <span className="loading loading-spinner loading-lg text-primary"></span>
-            <p className="text-xs">Loading PDF document...</p>
+            <p className="text-xs">Loading document...</p>
           </div>
         ) : fileUrl ? (
           <div 
-            style={{ width: `${zoom}%`, transition: 'width 0.2s ease-out' }} 
-            className="bg-white text-slate-900 rounded-lg shadow-xl min-h-[750px] p-2 transition-all flex flex-col justify-between"
+            className="bg-white text-slate-900 rounded-lg shadow-xl p-2 w-full h-full transition-all flex flex-col justify-between"
+            onContextMenu={(e) => e.preventDefault()}
           >
+            {/* Added #toolbar=0&navpanes=0 to hide download and printing options in the built-in PDF viewer */}
             <iframe 
-              src={`${fileUrl}#page=${currentPage}`} 
-              className="w-full h-[700px] rounded border-0" 
+              src={`${fileUrl}#page=${currentPage}&toolbar=0&navpanes=0`} 
+              className="w-full h-full rounded border-0" 
               title={title || "PDF Document"} 
             />
           </div>
@@ -120,7 +135,6 @@ const PdfViewer = ({ fileUrl, title }) => {
           <div className="flex flex-col items-center justify-center h-full text-base-content/50 gap-2">
             <FileTextIcon className="size-16 stroke-1 text-base-content/30" />
             <p className="text-sm font-medium">Document Preview Not Available</p>
-            <p className="text-xs text-base-content/40">You can download the resource to view locally.</p>
           </div>
         )}
       </div>

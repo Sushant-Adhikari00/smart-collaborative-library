@@ -94,12 +94,13 @@ const OwnerNotificationsModal = ({ isOpen, onClose, onCountChange }) => {
     const unread = notifications.filter(n => !n.isRead);
     if (unread.length === 0) return;
     try {
-      await Promise.all(unread.map(n => api.patch(`/notifications/${n.id}/read`)));
+      await api.patch('/notifications/read-all');
       setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
       if (onCountChange) onCountChange(0);
       toast.success('All notifications marked as read');
     } catch (err) {
       console.warn('Mark all read failed:', err);
+      toast.error('Could not mark all as read. Please try again.');
     }
   };
 

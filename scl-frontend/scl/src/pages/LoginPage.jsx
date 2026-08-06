@@ -67,7 +67,7 @@ const LoginPage = () => {
         <div className="card bg-base-100 shadow-xl p-8">
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-primary">Welcome Back!</h1>
-            <p className="text-base-content/70">Sign in to continue to NotesApp</p>
+            <p className="text-base-content/70">Sign in to continue to SCL Library</p>
           </div>
 
           <form onSubmit={handleLogin} className="space-y-4">

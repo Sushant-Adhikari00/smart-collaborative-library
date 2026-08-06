@@ -28,7 +28,7 @@ const LiveChatTab = ({ documentId }) => {
       {
         id: 1,
         sender: 'Academic Bot',
-        text: '👋 Welcome to the live collaboration workspace! Share thoughts, ask questions, or use @AI to chat with NotebookLM.',
+        text: '👋 Welcome to the live collaboration workspace! Share thoughts, ask questions, or use @AI to chat with the AI Assistant.',
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         isSystem: true,
         pinned: true

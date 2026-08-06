@@ -141,21 +141,25 @@ const ResourceCard = ({ note, setNotes }) => {
     <>
       <div 
         onClick={handleCardClick}
-        className="card bg-base-100 shadow-lg hover:shadow-2xl transition-all duration-300 border border-base-300 hover:border-primary/40 cursor-pointer overflow-hidden group flex flex-col justify-between"
+        className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-base-content/10 bg-base-100 shadow-xs transition-all duration-300 hover:-translate-y-1 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 cursor-pointer"
       >
-        {/* Card Header Thumbnail / Gradient Cover */}
-        <div className="h-28 bg-gradient-to-r from-primary/15 via-secondary/15 to-accent/15 relative p-4 flex flex-col justify-between group-hover:scale-[1.01] transition-transform">
-          <div className="flex items-center justify-between gap-2">
-            <span className="badge badge-sm badge-neutral font-mono font-medium shadow-xs">{fileType}</span>
+        {/* Card Header Cover Gradient */}
+        <div className="relative h-28 w-full bg-gradient-to-br from-primary/5 via-secondary/5 to-accent/5 p-4 flex flex-col justify-between border-b border-base-content/5">
+          {/* File Type and Verified Status */}
+          <div className="flex items-center justify-between">
+            <span className="px-2.5 py-0.5 rounded-full bg-base-200/80 text-[10px] font-mono font-bold tracking-wider text-base-content border border-base-content/5 shadow-2xs">
+              {fileType}
+            </span>
             {isVerified && (
-              <span className="badge badge-sm badge-success gap-1 font-semibold shadow-xs">
+              <span className="flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-success/10 text-[10px] font-bold text-success border border-success/20 shadow-2xs">
                 <CheckCircle2Icon className="size-3" /> Verified
               </span>
             )}
           </div>
 
+          {/* Category & Rating */}
           <div className="flex items-center justify-between">
-            <span className="badge badge-sm badge-outline bg-base-100/80 backdrop-blur-xs text-[10px] font-medium">
+            <span className="px-2 py-0.5 rounded-md bg-base-100/90 text-[10px] font-semibold text-base-content/70 border border-base-content/5 shadow-2xs">
               {category}
             </span>
 
@@ -164,18 +168,18 @@ const ResourceCard = ({ note, setNotes }) => {
               <label
                 tabIndex={0}
                 onClick={(e) => e.stopPropagation()}
-                className="flex items-center gap-1 bg-base-100/90 hover:bg-base-100 backdrop-blur-xs px-2 py-0.5 rounded-full text-xs font-bold text-warning border border-base-300 cursor-pointer transition-colors"
+                className="flex items-center gap-1.5 bg-base-100/90 hover:bg-base-100 px-2.5 py-0.5 rounded-full text-xs font-bold text-warning border border-base-content/5 cursor-pointer transition-colors shadow-2xs"
                 title={userRating ? `Your rating: ${userRating} ⭐ — Click to change` : 'Click to rate this document'}
               >
-                <StarIcon className={`size-3 ${userRating ? 'fill-warning' : 'fill-base-300'}`} />
+                <StarIcon className={`size-3 ${userRating ? 'fill-warning text-warning' : 'text-base-content/30'}`} />
                 <span>{averageRating != null ? Number(averageRating).toFixed(1) : '—'}</span>
               </label>
               <ul
                 tabIndex={0}
-                className="dropdown-content z-20 menu p-2 shadow-xl bg-base-100 rounded-box w-40 text-xs border border-base-300 space-y-1 mt-1"
+                className="dropdown-content z-20 menu p-2 shadow-xl bg-base-100 rounded-xl w-40 text-xs border border-base-content/10 space-y-1 mt-1.5"
                 onClick={(e) => e.stopPropagation()}
               >
-                <li className="menu-title text-[10px] uppercase font-bold text-base-content/50 px-1">
+                <li className="menu-title text-[10px] uppercase font-bold text-base-content/40 px-2 py-1">
                   {userRating ? `Your rating: ${userRating} ⭐` : 'Rate Resource'}
                 </li>
                 {[5, 4, 3, 2, 1].map((stars) => (
@@ -183,12 +187,12 @@ const ResourceCard = ({ note, setNotes }) => {
                     <button
                       onClick={() => handleRate(stars)}
                       disabled={ratingLoading}
-                      className={`flex items-center justify-between font-semibold py-1 px-2 ${
-                        userRating === stars ? 'text-warning bg-warning/10 rounded' : 'text-warning'
+                      className={`flex items-center justify-between font-semibold py-1.5 px-2.5 rounded-lg transition-colors ${
+                        userRating === stars ? 'text-warning bg-warning/10' : 'text-warning hover:bg-base-200'
                       }`}
                     >
                       <span className="flex items-center gap-1">
-                        {'⭐'.repeat(stars)} {stars}
+                        {'⭐'.repeat(stars)}
                       </span>
                       {userRating === stars && <span className="text-[9px] text-success">✓</span>}
                     </button>
@@ -200,66 +204,72 @@ const ResourceCard = ({ note, setNotes }) => {
         </div>
 
         {/* Card Main Body */}
-        <div className="card-body p-4 space-y-2 flex-1">
-          {/* Document Title */}
-          <h3 className="card-title text-sm font-bold text-base-content group-hover:text-primary transition-colors line-clamp-2">
-            {title}
-          </h3>
+        <div className="p-4 space-y-3 flex-1 flex flex-col justify-between">
+          <div className="space-y-2">
+            {/* Document Title */}
+            <h3 className="text-sm font-bold text-base-content leading-snug group-hover:text-primary transition-colors line-clamp-2">
+              {title}
+            </h3>
 
-          {/* Short Description (2-3 lines) */}
-          <p className="text-xs text-base-content/75 line-clamp-2 leading-relaxed">
-            {description}
-          </p>
+            {/* Short Description */}
+            <p className="text-[11px] text-base-content/70 line-clamp-2 leading-relaxed">
+              {description}
+            </p>
 
-          {/* AI Keyword Tags */}
-          {note.aiKeywords && (
-            <div className="flex flex-wrap gap-1 pt-0.5">
-              {note.aiKeywords
-                .split(",")
-                .map((kw) => kw.trim())
-                .filter(Boolean)
-                .slice(0, 4)
-                .map((kw) => (
-                  <span
-                    key={kw}
-                    className="badge badge-xs bg-primary/10 text-primary border border-primary/20 font-medium"
-                  >
-                    #{kw}
-                  </span>
-                ))}
-            </div>
-          )}
-
-          {/* Author Name & Upload Date */}
-          <div className="text-[11px] text-base-content/50 pt-1 flex items-center justify-between border-t border-base-200">
-            <span className="font-medium truncate max-w-[140px]">By {authorName}</span>
-            <span>{uploadDate}</span>
+            {/* AI Keyword Tags */}
+            {note.aiKeywords && (
+              <div className="flex flex-wrap gap-1 pt-1">
+                {note.aiKeywords
+                  .split(",")
+                  .map((kw) => kw.trim())
+                  .filter(Boolean)
+                  .slice(0, 3)
+                  .map((kw) => (
+                    <span
+                      key={kw}
+                      className="px-2 py-0.5 rounded-full bg-primary/5 text-[9px] font-bold text-primary border border-primary/10 tracking-wide"
+                    >
+                      #{kw}
+                    </span>
+                  ))}
+              </div>
+            )}
           </div>
 
-          {/* Engagement Metrics Row */}
-          <div className="flex items-center gap-3 text-[11px] text-base-content/60 pt-1">
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowDiscussionModal(true);
-              }}
-              className="flex items-center gap-1 hover:text-primary transition-colors cursor-pointer"
-              title="Open Comments & Discussion"
-            >
-              <MessageSquareIcon className="size-3 text-secondary" /> {totalComments} Comments
-            </button>
-            {isOwner && (
-              <span className="badge badge-xs badge-primary ml-auto font-normal">Yours</span>
-            )}
+          <div className="space-y-2 pt-2 border-t border-base-content/5">
+            {/* Author Name & Upload Date */}
+            <div className="text-[10px] text-base-content/50 flex items-center justify-between">
+              <span className="font-semibold truncate max-w-[130px]">By {authorName}</span>
+              <span>{uploadDate}</span>
+            </div>
+
+            {/* Engagement Metrics Row */}
+            <div className="flex items-center gap-3 text-[10px] text-base-content/60">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowDiscussionModal(true);
+                }}
+                className="flex items-center gap-1 hover:text-primary transition-colors cursor-pointer font-medium"
+                title="Open Comments & Discussion"
+              >
+                <MessageSquareIcon className="size-3 text-secondary" /> {totalComments} Comments
+              </button>
+              {isOwner && (
+                <span className="px-1.5 py-0.5 rounded bg-primary/10 text-primary text-[9px] font-bold ml-auto uppercase tracking-wide">
+                  Yours
+                </span>
+              )}
+            </div>
           </div>
         </div>
 
         {/* Card Footer Actions */}
-        <div className="px-4 py-2.5 bg-base-200/50 border-t border-base-300 flex items-center justify-between gap-1 text-xs">
-          <div className="flex items-center gap-1">
+        <div className="px-3.5 py-2 bg-base-200/30 border-t border-base-content/5 flex items-center justify-between gap-1">
+          <div className="flex items-center gap-1.5">
             <button
               onClick={() => setShowViewerModal(true)}
-              className="btn btn-ghost btn-xs text-primary gap-1"
+              className="px-2.5 py-1 rounded-md text-[10px] font-bold text-primary hover:bg-primary/10 transition-colors flex items-center gap-1"
               title="View Resource Modal"
             >
               <EyeIcon className="size-3.5" /> View
@@ -269,7 +279,7 @@ const ResourceCard = ({ note, setNotes }) => {
               <>
                 <button
                   onClick={handleAiChatClick}
-                  className="btn btn-ghost btn-xs text-secondary gap-1"
+                  className="px-2.5 py-1 rounded-md text-[10px] font-bold text-secondary hover:bg-secondary/10 transition-colors flex items-center gap-1"
                   title="Chat with AI"
                 >
                   <BotIcon className="size-3.5" /> AI
@@ -277,7 +287,7 @@ const ResourceCard = ({ note, setNotes }) => {
 
                 <button
                   onClick={handleCollaborateClick}
-                  className="btn btn-ghost btn-xs text-accent gap-1"
+                  className="px-2.5 py-1 rounded-md text-[10px] font-bold text-accent hover:bg-accent/10 transition-colors flex items-center gap-1"
                   title="Collaborate"
                 >
                   <UsersIcon className="size-3.5" /> Collaborate
@@ -293,7 +303,7 @@ const ResourceCard = ({ note, setNotes }) => {
                 e.stopPropagation();
                 setShowDiscussionModal(true);
               }}
-              className="btn btn-ghost btn-xs btn-square text-base-content/50 hover:text-primary"
+              className="p-1 rounded-md text-base-content/40 hover:text-primary hover:bg-base-200/50 transition-colors"
               title="Comments & Discussion"
             >
               <MessageSquareIcon className="size-3.5" />
@@ -301,15 +311,15 @@ const ResourceCard = ({ note, setNotes }) => {
 
             <button
               onClick={handleBookmarkToggle}
-              className={`btn btn-ghost btn-xs btn-square ${isBookmarked ? 'text-warning' : 'text-base-content/50'}`}
+              className={`p-1 rounded-md transition-colors ${isBookmarked ? 'text-warning hover:bg-warning/10' : 'text-base-content/40 hover:text-warning hover:bg-base-200/50'}`}
               title="Bookmark"
             >
-              <BookmarkIcon className="size-3.5" />
+              <BookmarkIcon className={`size-3.5 ${isBookmarked ? 'fill-warning' : ''}`} />
             </button>
 
             <button
               onClick={handleShare}
-              className="btn btn-ghost btn-xs btn-square text-base-content/50"
+              className="p-1 rounded-md text-base-content/40 hover:text-primary hover:bg-base-200/50 transition-colors"
               title="Share"
             >
               <Share2Icon className="size-3.5" />
@@ -318,7 +328,7 @@ const ResourceCard = ({ note, setNotes }) => {
             {isOwner && (
               <button
                 onClick={handleDelete}
-                className="btn btn-ghost btn-xs btn-square text-error"
+                className="p-1 rounded-md text-error hover:bg-error/10 transition-colors"
                 title="Delete Document"
               >
                 <Trash2Icon className="size-3.5" />

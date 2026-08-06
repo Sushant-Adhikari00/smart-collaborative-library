@@ -163,7 +163,7 @@ const AdminPage = () => {
             Admin Control Center
           </h1>
           <p className="text-xs md:text-sm text-base-content/60 mt-1.5">
-            Oversee user accounts, check platform resource loads, and manage NotebookLM models.
+            Oversee user accounts, check platform resource loads, and manage AI models.
           </p>
         </div>
 
@@ -281,8 +281,9 @@ const AdminPage = () => {
                   className="select select-bordered select-xs text-[11px] bg-base-100 focus:select-primary"
                 >
                   <option value="ALL">All Roles</option>
-                  <option value="ROLE_USER">User Role</option>
-                  <option value="ROLE_ADMIN">Admin Role</option>
+                  <option value="STUDENT">Student</option>
+                  <option value="TEACHER">Teacher</option>
+                  <option value="ADMIN">Admin</option>
                 </select>
 
                 <select
@@ -335,12 +336,12 @@ const AdminPage = () => {
                   ) : (
                     <table className="table table-md table-zebra bg-base-100">
                       <thead>
-                        <tr className="bg-base-200/50 text-xs">
-                          <th>User Profile</th>
-                          <th>Email Address</th>
-                          <th>Security Access Role</th>
-                          <th>Status Badge</th>
-                          <th className="text-right">Access Controls</th>
+                        <tr className="bg-base-200/50 text-[11px] uppercase tracking-wide text-base-content/50">
+                          <th className="whitespace-nowrap">User</th>
+                          <th className="whitespace-nowrap hidden sm:table-cell">Email</th>
+                          <th className="whitespace-nowrap">Role</th>
+                          <th className="whitespace-nowrap">Status</th>
+                          <th className="text-right whitespace-nowrap">Controls</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -356,41 +357,58 @@ const AdminPage = () => {
                                 <span className="font-bold text-xs text-base-content">{u.username || u.name}</span>
                               </div>
                             </td>
-                            <td className="text-xs text-base-content/75 font-mono">{u.email}</td>
+                            <td className="text-xs text-base-content/75 font-mono hidden sm:table-cell">{u.email}</td>
                             <td>
-                              <select
-                                className={`select select-bordered select-xs font-semibold ${
-                                  u.role === "ROLE_ADMIN" ? "text-primary border-primary/30" : "text-base-content"
-                                }`}
-                                value={u.role}
-                                onChange={(e) => handleUpdateRole(u, e.target.value)}
-                                disabled={u.id === user.id}
-                              >
-                                <option value="ROLE_USER">User</option>
-                                <option value="ROLE_ADMIN">Admin</option>
-                              </select>
+                              {/* Role color badge + dropdown — equal height aligned */}
+                              <div className="flex items-center gap-2">
+                                <span className={`inline-flex items-center justify-center w-20 h-7 px-2.5 rounded-lg text-[10px] font-bold whitespace-nowrap shrink-0 ${
+                                  u.role === "ADMIN"
+                                    ? "bg-primary/15 text-primary border border-primary/30"
+                                    : u.role === "TEACHER"
+                                    ? "bg-warning/15 text-warning border border-warning/30"
+                                    : "bg-base-content/10 text-base-content/60 border border-base-content/15"
+                                }`}>
+                                  {u.role === "ADMIN" ? "⚙ Admin" : u.role === "TEACHER" ? "🎓 Teacher" : "👤 Student"}
+                                </span>
+                                {u.id !== user.id && (
+                                  <select
+                                    className="select select-bordered select-xs font-semibold text-[11px] h-7 min-h-0 rounded-lg"
+                                    value={u.role}
+                                    onChange={(e) => handleUpdateRole(u, e.target.value)}
+                                  >
+                                    <option value="STUDENT">Student</option>
+                                    <option value="TEACHER">Teacher</option>
+                                    <option value="ADMIN">Admin</option>
+                                  </select>
+                                )}
+                              </div>
                             </td>
                             <td>
-                              <span className={`badge badge-xs font-bold py-1.5 px-2.5 ${
-                                u.active ? "badge-success text-success-content" : "badge-error text-error-content"
+                              <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold leading-none whitespace-nowrap ${
+                                u.active
+                                  ? "bg-success/15 text-success border border-success/30"
+                                  : "bg-error/15 text-error border border-error/30"
                               }`}>
+                                <span className={`size-1.5 rounded-full shrink-0 ${u.active ? 'bg-success' : 'bg-error'}`} />
                                 {u.active ? "Active" : "Suspended"}
                               </span>
                             </td>
                             <td className="text-right">
-                              {u.id !== user.id && (
-                                <div className="inline-flex items-center gap-2">
-                                  <span className="text-[10px] font-bold text-base-content/40">
-                                    {u.active ? "Active" : "Deactivated"}
-                                  </span>
-                                  <input
-                                    type="checkbox"
-                                    className="toggle toggle-sm toggle-success"
-                                    checked={u.active}
-                                    onChange={() => handleToggleUser(u)}
-                                    title={u.active ? "Suspend account" : "Activate account"}
-                                  />
-                                </div>
+                              {u.id !== user.id ? (
+                                <button
+                                  onClick={() => handleToggleUser(u)}
+                                  title={u.active ? "Suspend account" : "Activate account"}
+                                  className={`inline-flex items-center gap-1.5 px-3 h-7 rounded-lg text-[11px] font-bold border transition-all duration-200 ${
+                                    u.active
+                                      ? "bg-error/10 text-error border-error/25 hover:bg-error/20"
+                                      : "bg-success/10 text-success border-success/25 hover:bg-success/20"
+                                  }`}
+                                >
+                                  <span className={`size-1.5 rounded-full shrink-0 ${u.active ? 'bg-error' : 'bg-success'}`} />
+                                  {u.active ? "Suspend" : "Activate"}
+                                </button>
+                              ) : (
+                                <span className="text-[10px] text-base-content/30 italic">You</span>
                               )}
                             </td>
                           </tr>

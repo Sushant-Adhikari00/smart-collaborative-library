@@ -66,7 +66,7 @@ const SharedAiTab = ({ documentId, title }) => {
           <BotIcon className="size-5 text-secondary" />
           <div>
             <h4 className="font-bold text-xs flex items-center gap-1.5">
-              Shared NotebookLM Assistant 
+              Shared AI Study Assistant 
               <span className="badge badge-xs badge-secondary">Group Visible</span>
             </h4>
             <p className="text-[11px] text-base-content/60">

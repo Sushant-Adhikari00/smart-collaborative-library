@@ -40,10 +40,10 @@ const Navbar = ({ onSearch, toggleTheme, currentTheme }) => {
 
   return (
     <>
-      <nav className="bg-base-100 shadow-lg p-4 sticky top-0 z-30">
+      <nav className="backdrop-blur-md bg-base-100/80 border-b border-base-content/5 p-4 sticky top-0 z-30 transition-all duration-300">
         <div className="container mx-auto flex justify-between items-center">
           {/* Logo */}
-          <Link to="/" className="font-bold text-2xl text-primary flex items-center gap-2">
+          <Link to="/" className="font-bold text-2xl text-primary flex items-center gap-2 font-display tracking-tight hover:scale-[1.02] transition-transform">
             📚 SCL Library
           </Link>
 
@@ -54,7 +54,7 @@ const Navbar = ({ onSearch, toggleTheme, currentTheme }) => {
                 type="text"
                 placeholder="Search resources, topics, or authors..."
                 onChange={(e) => onSearch(e.target.value)}
-                className="bg-base-200 text-neutral placeholder-base-content/60 w-full py-2 pl-10 pr-4 rounded-full border-2 border-primary/50 focus:border-primary focus:outline-none transition-colors text-sm"
+                className="bg-base-200/60 text-neutral placeholder-base-content/50 w-full py-2 pl-10 pr-4 rounded-full border border-base-content/10 focus:border-primary focus:bg-base-100 focus:outline-none transition-all text-sm shadow-2xs"
               />
               <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-primary" />
             </div>
@@ -62,7 +62,7 @@ const Navbar = ({ onSearch, toggleTheme, currentTheme }) => {
 
           {/* Right-side buttons (Desktop) */}
           <div className="hidden md:flex items-center space-x-3">
-            <Link to="/contact" className="btn btn-ghost btn-sm text-primary">Contact Us</Link>
+            <Link to="/contact" className="btn btn-ghost btn-sm text-primary btn-interactive">Contact Us</Link>
             {user ? (
               <>
                 <span className="text-primary text-xs font-semibold">
@@ -70,19 +70,19 @@ const Navbar = ({ onSearch, toggleTheme, currentTheme }) => {
                 </span>
 
                 {(user.role === "ROLE_ADMIN" || user.role === "admin" || user.role === "ADMIN") && (
-                  <Link to="/admin" className="btn btn-ghost btn-sm text-primary">
+                  <Link to="/admin" className="btn btn-ghost btn-sm text-primary btn-interactive">
                     Admin
                   </Link>
                 )}
 
-                <Link to="/collaboration" className="btn btn-ghost btn-sm text-primary flex items-center gap-1">
+                <Link to="/collaboration" className="btn btn-ghost btn-sm text-primary flex items-center gap-1 btn-interactive">
                   <Users className="h-4 w-4" /> Study Groups
                 </Link>
 
                 {/* Notifications Bell */}
                 <button
                   onClick={() => setIsNotificationsOpen(true)}
-                  className="btn btn-ghost btn-circle btn-sm text-primary relative"
+                  className="btn btn-ghost btn-circle btn-sm text-primary relative btn-interactive"
                   title="Notifications"
                 >
                   <Bell className="h-5 w-5" />
@@ -93,24 +93,24 @@ const Navbar = ({ onSearch, toggleTheme, currentTheme }) => {
                   )}
                 </button>
 
-                <Link to="/create" className="btn btn-primary btn-sm">
+                <Link to="/create" className="btn btn-primary btn-sm btn-interactive shadow-xs">
                   Upload Resource
                 </Link>
 
                 <button
                   onClick={() => setIsLogoutModalOpen(true)}
-                  className="btn btn-secondary btn-sm flex items-center gap-1.5"
+                  className="btn btn-secondary btn-sm flex items-center gap-1.5 btn-interactive shadow-xs"
                 >
                   <LogOutIcon className="h-4 w-4" /> Logout
                 </button>
               </>
             ) : (
               <>
-                <Link to="/login" className="btn btn-primary btn-sm">Login</Link>
-                <Link to="/signup" className="btn btn-secondary btn-sm">Sign Up</Link>
+                <Link to="/login" className="btn btn-primary btn-sm btn-interactive shadow-xs">Login</Link>
+                <Link to="/signup" className="btn btn-secondary btn-sm btn-interactive shadow-xs">Sign Up</Link>
               </>
             )}
-            <button onClick={toggleTheme} className="btn btn-ghost btn-circle text-primary">
+            <button onClick={toggleTheme} className="btn btn-ghost btn-circle text-primary btn-interactive">
               {currentTheme === 'retro' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
             </button>
           </div>
@@ -186,7 +186,11 @@ const Navbar = ({ onSearch, toggleTheme, currentTheme }) => {
       {/* Owner Notifications Inbox Modal */}
       <OwnerNotificationsModal
         isOpen={isNotificationsOpen}
-        onClose={() => setIsNotificationsOpen(false)}
+        onClose={() => {
+          setIsNotificationsOpen(false);
+          // Re-fetch fresh count from server when modal closes
+          fetchUnreadCount();
+        }}
         onCountChange={(count) => setUnreadCount(count)}
       />
     </>

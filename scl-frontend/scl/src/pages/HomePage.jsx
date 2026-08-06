@@ -70,7 +70,7 @@ const HomePage = ({ searchQuery }) => {
               Smart Collaborative Learning Platform
             </h1>
             <p className="text-xs md:text-sm text-base-content/70 max-w-xl">
-              Drive, Notion & NotebookLM inspired academic workspace. Browse verified notes, conduct doc-grounded AI research, and collaborate in real-time.
+              A smart academic workspace for collaborative learning. Browse verified notes, conduct doc-grounded AI research, and collaborate in real-time.
             </p>
           </div>
 
@@ -79,7 +79,7 @@ const HomePage = ({ searchQuery }) => {
               <SparklesIcon className="size-6" />
             </div>
             <div className="text-xs">
-              <span className="font-bold text-base-content block">NotebookLM AI Active</span>
+              <span className="font-bold text-base-content block">SCL AI Active</span>
               <span className="text-base-content/60">Doc-grounded study assistant</span>
             </div>
           </div>

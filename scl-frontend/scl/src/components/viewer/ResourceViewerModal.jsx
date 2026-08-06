@@ -1,4 +1,4 @@
-import { useState, useContext } from 'react';
+import { useState, useContext, useEffect } from 'react';
 import { 
   XIcon, 
   DownloadIcon, 
@@ -20,6 +20,7 @@ import RequestAccessModal from '../collaboration/RequestAccessModal.jsx';
 import CollaborationWorkspaceModal from '../collaboration/CollaborationWorkspaceModal.jsx';
 import ResourceDiscussionModal from '../collaboration/ResourceDiscussionModal.jsx';
 import { AuthContext } from '../../context/authContext.jsx';
+import { documentApi } from '../../services/collaborationApi.js';
 import toast from 'react-hot-toast';
 
 const ResourceViewerModal = ({ isOpen, onClose, note }) => {
@@ -30,10 +31,24 @@ const ResourceViewerModal = ({ isOpen, onClose, note }) => {
   const [showWorkspaceModal, setShowWorkspaceModal] = useState(false);
   const [showDiscussionModal, setShowDiscussionModal] = useState(false);
 
+  const docId = note?.id || note?._id;
+  const [averageRating, setAverageRating] = useState(note.averageRating || note.rating || null);
+
+  useEffect(() => {
+    if (!isOpen || !docId) return;
+    documentApi.getRating(docId)
+      .then((data) => {
+        if (data && data.averageRating != null) {
+          setAverageRating(data.averageRating);
+        }
+      })
+      .catch(() => { /* silent fallback */ });
+  }, [isOpen, docId]);
+
   if (!isOpen || !note) return null;
 
   const isVerified = note.isVerified || note.teacherVerified || note.category === 'Lecture Notes' || true;
-  const rating = note.rating || note.averageRating || 4.8;
+  const rating = averageRating != null ? Number(averageRating).toFixed(1) : '—';
   const downloads = note.downloadCount ?? note.totalDownloads ?? 0;
   const commentsCount = note.commentCount ?? note.totalComments ?? 0;
 
@@ -81,14 +96,14 @@ const ResourceViewerModal = ({ isOpen, onClose, note }) => {
         <div className="bg-base-100 rounded-2xl shadow-2xl w-full max-w-7xl h-[88vh] flex flex-col overflow-hidden border border-base-300">
           
           {/* Header Bar */}
-          <div className="bg-base-200/90 px-6 py-3 border-b border-base-300 flex items-center justify-between gap-4 shrink-0">
+          <div className="bg-base-200/90 px-4 md:px-6 py-3 border-b border-base-300 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0">
             <div className="flex items-center gap-3 min-w-0">
               <div className="p-2 rounded-xl bg-primary/10 text-primary shrink-0">
                 <FileTextIcon className="size-6" />
               </div>
               <div className="min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <h2 className="font-bold text-base text-base-content truncate">{note.title}</h2>
+                  <h2 className="font-bold text-sm md:text-base text-base-content truncate max-w-[280px] md:max-w-md">{note.title}</h2>
                   {isVerified && (
                     <span className="badge badge-sm badge-success gap-1 font-semibold shrink-0">
                       <CheckCircle2Icon className="size-3" /> Teacher Verified
@@ -100,23 +115,35 @@ const ResourceViewerModal = ({ isOpen, onClose, note }) => {
                 </div>
                 
                 {/* Header Meta Stats */}
-                <div className="flex items-center gap-4 text-xs text-base-content/60 mt-0.5 flex-wrap">
+                <div className="flex items-center gap-3 md:gap-4 text-xs text-base-content/60 mt-1 flex-wrap">
                   <span>Author: <strong className="text-base-content font-medium">{note.uploadedBy || 'Academic Author'}</strong></span>
                   <span>•</span>
                   <span>Uploaded: {note.createdAt ? new Date(note.createdAt).toLocaleDateString() : 'Jul 2026'}</span>
                   <span>•</span>
-                  <span className="flex items-center gap-1 text-warning font-semibold">
-                    <StarIcon className="size-3.5 fill-warning" /> {rating}
-                  </span>
+                  <button 
+                    onClick={() => setShowDiscussionModal(true)}
+                    className="flex items-center gap-1 text-warning hover:text-warning-hover transition-colors font-semibold cursor-pointer"
+                    title="View Ratings & Feedback"
+                  >
+                    <StarIcon className="size-3.5 fill-warning text-warning" /> {rating}
+                  </button>
                   <span>•</span>
-                  <span>💬 {commentsCount} comments</span>
+                  <button
+                    onClick={() => setShowDiscussionModal(true)}
+                    className="flex items-center gap-1 text-secondary hover:text-primary transition-colors font-semibold cursor-pointer"
+                    title="Open Comments & Discussion"
+                  >
+                    💬 {commentsCount} comments
+                  </button>
                 </div>
               </div>
             </div>
 
-            <button onClick={onClose} className="btn btn-ghost btn-sm btn-circle shrink-0" title="Close Viewer">
-              <XIcon className="size-5" />
-            </button>
+            <div className="flex items-center self-end sm:self-auto gap-2">
+              <button onClick={onClose} className="btn btn-ghost btn-sm btn-circle shrink-0" title="Close Viewer">
+                <XIcon className="size-5" />
+              </button>
+            </div>
           </div>
 
           {/* Modal Main Body (Left 68% PDF, Right 32% Info/Actions - Stacked on Mobile) */}
@@ -196,7 +223,7 @@ const ResourceViewerModal = ({ isOpen, onClose, note }) => {
                   onClick={() => setShowAiDrawer(true)}
                   className="btn btn-sm btn-secondary w-full flex items-center justify-center gap-2 font-semibold shadow-xs"
                 >
-                  <BotIcon className="size-4" /> Chat with AI (NotebookLM)
+                  <BotIcon className="size-4" /> Chat with AI Assistant
                 </button>
 
                 <button
