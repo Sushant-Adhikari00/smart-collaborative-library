@@ -3,12 +3,20 @@ package com.scl.modules.admin.service;
 import com.scl.audit.entity.AuditLog;
 import com.scl.audit.repository.AuditRepository;
 import com.scl.common.PageResponse;
+import com.scl.common.SupabaseStorageUtil;
 import com.scl.exception.ResourceNotFoundException;
 import com.scl.modules.admin.dto.AdminUserResponse;
 import com.scl.modules.admin.dto.AnalyticsResponse;
 import com.scl.modules.auth.entity.Role;
 import com.scl.modules.auth.entity.User;
 import com.scl.modules.auth.repository.UserRepository;
+import com.scl.modules.chat.repository.ChatMessageRepository;
+import com.scl.modules.collaboration.repository.CollaborationRequestRepository;
+import com.scl.modules.document.entity.Document;
+import com.scl.modules.document.repository.DocumentCommentRepository;
+import com.scl.modules.document.repository.DocumentRatingRepository;
+import com.scl.modules.document.repository.DocumentRepository;
+import com.scl.modules.document.repository.DocumentShareRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -27,6 +35,13 @@ public class AdminService {
 
     private final UserRepository userRepository;
     private final AuditRepository auditRepository;
+    private final DocumentRepository documentRepository;
+    private final DocumentShareRepository documentShareRepository;
+    private final DocumentCommentRepository documentCommentRepository;
+    private final DocumentRatingRepository documentRatingRepository;
+    private final CollaborationRequestRepository collaborationRequestRepository;
+    private final ChatMessageRepository chatMessageRepository;
+    private final SupabaseStorageUtil supabaseStorageUtil;
 
     /**
      * Get all users with pagination.
@@ -84,13 +99,31 @@ public class AdminService {
     }
 
     /**
-     * Force delete a document. (Stubbed — Document module not yet implemented)
+     * Force delete a document by ID.
      */
     @Transactional
     public void forceDeleteDocument(Long documentId) {
-        log.warn("forceDeleteDocument called for documentId: {} — Document module not yet implemented", documentId);
-        // TODO: Implement when Document module is created
-        throw new UnsupportedOperationException("Document module not yet implemented");
+        log.info("forceDeleteDocument called for documentId: {}", documentId);
+
+        Document document = documentRepository.findById(documentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Document", "id", documentId));
+
+        if (document.getFileUrl() != null && !document.getFileUrl().isBlank()) {
+            try {
+                supabaseStorageUtil.deleteFile(document.getFileUrl());
+            } catch (Exception e) {
+                log.warn("Failed to delete file from storage for document {}: {}", documentId, e.getMessage());
+            }
+        }
+
+        // Clean up child dependencies to prevent FK constraint failures
+        documentShareRepository.deleteByDocument_Id(Math.toIntExact(documentId));
+        documentCommentRepository.deleteByDocumentId(documentId);
+        documentRatingRepository.deleteByDocumentId(documentId);
+        collaborationRequestRepository.deleteByDocumentId(documentId);
+
+        documentRepository.delete(document);
+        log.info("Document with ID {} force deleted successfully", documentId);
     }
 
     /**
@@ -104,14 +137,19 @@ public class AdminService {
         LocalDateTime startOfToday = LocalDate.now().atStartOfDay();
         long activeUsersToday = userRepository.countActiveUsersSince(startOfToday);
 
+        long totalDocuments = documentRepository.count();
+        LocalDateTime startOfWeek = LocalDate.now().minusDays(7).atStartOfDay();
+        long documentsUploadedThisWeek = documentRepository.countByUploadDateAfter(startOfWeek);
+        long totalChatMessages = chatMessageRepository.count();
+
         return AnalyticsResponse.builder()
                 .totalUsers(totalUsers)
-                .totalDocuments(0)                  // TODO: Wire when Document module exists
-                .totalSummaries(0)                  // TODO: Wire when Summary module exists
-                .totalChatMessages(0)               // TODO: Wire when Chat module exists
+                .totalDocuments(totalDocuments)
+                .totalSummaries(0)
+                .totalChatMessages(totalChatMessages)
                 .activeUsersToday(activeUsersToday)
-                .documentsUploadedThisWeek(0)       // TODO: Wire when Document module exists
-                .popularSubjects(Collections.emptyMap()) // TODO: Wire when Document module exists
+                .documentsUploadedThisWeek(documentsUploadedThisWeek)
+                .popularSubjects(Collections.emptyMap())
                 .build();
     }
 
@@ -134,6 +172,14 @@ public class AdminService {
     }
 
     private AdminUserResponse mapToAdminUserResponse(User user) {
+        long count = 0;
+        if (user.getFullName() != null) {
+            count = documentRepository.countByUploadedBy(user.getFullName());
+        }
+        if (count == 0 && user.getEmail() != null) {
+            count = documentRepository.countByUploadedBy(user.getEmail());
+        }
+
         return AdminUserResponse.builder()
                 .id(user.getId())
                 .uuid(user.getUuid())
@@ -141,7 +187,7 @@ public class AdminService {
                 .fullName(user.getFullName())
                 .role(user.getRole())
                 .isActive(user.getIsActive())
-                .documentCount(0) // TODO: Wire when Document module exists
+                .documentCount((int) count)
                 .createdAt(user.getCreatedAt())
                 .build();
     }

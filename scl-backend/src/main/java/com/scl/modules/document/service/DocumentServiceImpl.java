@@ -18,6 +18,9 @@ import com.scl.modules.auth.repository.UserRepository;
 import com.scl.modules.auth.entity.User;
 import com.scl.modules.auth.entity.Role;
 import com.scl.common.SupabaseStorageUtil;
+import com.scl.modules.document.repository.DocumentCommentRepository;
+import com.scl.modules.document.repository.DocumentRatingRepository;
+import com.scl.modules.collaboration.repository.CollaborationRequestRepository;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,6 +44,9 @@ public class DocumentServiceImpl implements DocumentService {
     private final SupabaseStorageUtil supabaseStorageUtil;
     private final AiServiceClient aiServiceClient;
     private final DocumentShareRepository documentShareRepository;
+    private final DocumentCommentRepository documentCommentRepository;
+    private final DocumentRatingRepository documentRatingRepository;
+    private final CollaborationRequestRepository collaborationRequestRepository;
     private final UserRepository userRepository;
 
     // ─────────────────────────────────────────────────────────────────
@@ -273,6 +279,12 @@ public class DocumentServiceImpl implements DocumentService {
                     return ApiResponse.error("Access Denied: you are not the owner of this document");
                 }
             }
+
+            // Clean up child dependencies to prevent FK constraint failures
+            documentShareRepository.deleteByDocument_Id(Math.toIntExact(id));
+            documentCommentRepository.deleteByDocumentId(id);
+            documentRatingRepository.deleteByDocumentId(id);
+            collaborationRequestRepository.deleteByDocumentId(id);
 
             supabaseStorageUtil.deleteFile(document.getFileUrl());
 
