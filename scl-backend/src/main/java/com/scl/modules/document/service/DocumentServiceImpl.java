@@ -19,7 +19,6 @@ import com.scl.modules.auth.repository.UserRepository;
 import com.scl.modules.auth.entity.User;
 import com.scl.modules.auth.entity.Role;
 import com.scl.common.SupabaseStorageUtil;
-import com.scl.modules.document.repository.DocumentCommentRepository;
 import com.scl.modules.document.repository.DocumentRatingRepository;
 import com.scl.modules.collaboration.repository.CollaborationRequestRepository;
 import lombok.RequiredArgsConstructor;
@@ -49,7 +48,6 @@ public class DocumentServiceImpl implements DocumentService {
     private final DocumentRatingRepository documentRatingRepository;
     private final CollaborationRequestRepository collaborationRequestRepository;
     private final UserRepository userRepository;
-    private final DocumentCommentRepository documentCommentRepository;
 
     // ─────────────────────────────────────────────────────────────────
     // UPLOAD

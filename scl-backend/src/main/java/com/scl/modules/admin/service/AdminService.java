@@ -12,6 +12,7 @@ import com.scl.modules.auth.entity.User;
 import com.scl.modules.auth.repository.UserRepository;
 import com.scl.modules.chat.repository.ChatMessageRepository;
 import com.scl.modules.collaboration.repository.CollaborationRequestRepository;
+import com.scl.modules.collaboration.repository.DocumentResourceRepository;
 import com.scl.modules.document.entity.Document;
 import com.scl.modules.document.repository.DocumentCommentRepository;
 import com.scl.modules.document.repository.DocumentRatingRepository;
@@ -40,6 +41,7 @@ public class AdminService {
     private final DocumentCommentRepository documentCommentRepository;
     private final DocumentRatingRepository documentRatingRepository;
     private final CollaborationRequestRepository collaborationRequestRepository;
+    private final DocumentResourceRepository documentResourceRepository;
     private final ChatMessageRepository chatMessageRepository;
     private final SupabaseStorageUtil supabaseStorageUtil;
 
@@ -121,6 +123,7 @@ public class AdminService {
         documentCommentRepository.deleteByDocumentId(documentId);
         documentRatingRepository.deleteByDocumentId(documentId);
         collaborationRequestRepository.deleteByDocumentId(documentId);
+        documentResourceRepository.deleteByDocumentId(documentId);
 
         documentRepository.delete(document);
         log.info("Document with ID {} force deleted successfully", documentId);
