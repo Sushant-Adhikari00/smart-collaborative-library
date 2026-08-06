@@ -9,4 +9,6 @@ import java.util.List;
 @Repository
 public interface DocumentResourceRepository extends JpaRepository<DocumentResource, Long> {
     List<DocumentResource> findByDocumentIdOrderByUploadedAtDesc(Long documentId);
+
+    void deleteByDocumentId(Long documentId);
 }
