@@ -24,4 +24,6 @@ public interface CollaborationRequestRepository extends JpaRepository<Collaborat
 
     /** All requests for a specific document by status */
     List<CollaborationRequest> findByDocumentIdAndStatus(Long documentId, CollaborationRequestStatus status);
+
+    void deleteByDocumentId(Long documentId);
 }

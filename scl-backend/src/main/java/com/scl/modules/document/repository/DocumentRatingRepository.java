@@ -16,4 +16,6 @@ public interface DocumentRatingRepository extends JpaRepository<DocumentRating, 
     Double getAverageRatingByDocumentId(@Param("documentId") Long documentId);
 
     long countByDocumentId(Long documentId);
+
+    void deleteByDocumentId(Long documentId);
 }

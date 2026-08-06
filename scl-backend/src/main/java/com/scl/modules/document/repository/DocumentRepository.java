@@ -19,4 +19,8 @@ public interface DocumentRepository extends JpaRepository<Document,Long> {
     // FIX: Document.status is a DocumentStatus enum, not a String.
     // Passing a String here would fail at startup with a PropertyReferenceException.
     List<Document> findByStatus(DocumentStatus status);
+
+    long countByUploadDateAfter(java.time.LocalDateTime date);
+
+    long countByUploadedBy(String uploadedBy);
 }

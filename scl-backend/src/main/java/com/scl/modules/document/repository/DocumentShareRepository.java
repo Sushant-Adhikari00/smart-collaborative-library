@@ -11,4 +11,5 @@ public interface DocumentShareRepository extends JpaRepository<DocumentShare, Lo
     List<DocumentShare> findByDocument_Id(Integer documentId);
     List<DocumentShare> findBySharedWith_Id(Long userId);
     boolean existsByDocument_IdAndSharedWith_Id(Integer documentId, Long userId);
+    void deleteByDocument_Id(Integer documentId);
 }
