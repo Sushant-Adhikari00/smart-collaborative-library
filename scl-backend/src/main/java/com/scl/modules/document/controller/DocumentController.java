@@ -7,12 +7,7 @@ import com.scl.modules.document.dto.DocumentUploadRequest;
 import com.scl.modules.document.repository.CategoryRepository;
 import com.scl.modules.document.service.DocumentService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.UrlResource;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -26,9 +21,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
-
 @RestController
 @RequestMapping("/api/v1/documents")
 @RequiredArgsConstructor
@@ -36,9 +28,6 @@ public class DocumentController {
 
     private final DocumentService documentService;
     private final CategoryRepository categoryRepository;
-
-    @Value("${app.upload.dir:uploads/documents}")
-    private String uploadDir;
 
     @PostMapping(value = "/upload", consumes = "multipart/form-data")
     public ResponseEntity<ApiResponse<?>> uploadDocument(
@@ -58,31 +47,6 @@ public class DocumentController {
         return response.isSuccess()
                 ? ResponseEntity.status(HttpStatus.CREATED).body(response)
                 : ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-    }
-
-    @GetMapping("/files/{filename:.+}")
-    public ResponseEntity<Resource> serveFile(@PathVariable String filename) {
-        try {
-            Path filePath = Paths.get(uploadDir)
-                    .toAbsolutePath()
-                    .normalize()
-                    .resolve(filename);
-
-            Resource resource = new UrlResource(filePath.toUri());
-
-            if (!resource.exists() || !resource.isReadable()) {
-                return ResponseEntity.notFound().build();
-            }
-
-            String contentType = detectContentType(filename);
-
-            return ResponseEntity.ok()
-                    .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + filename + "\"")
-                    .contentType(MediaType.parseMediaType(contentType))
-                    .body(resource);
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().build();
-        }
     }
 
     @GetMapping("/{id}")
@@ -166,19 +130,5 @@ public class DocumentController {
                 ? ResponseEntity.ok(response)
                 : ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
     }
-
-    private String detectContentType(String filename) {
-        String lower = filename.toLowerCase();
-        if (lower.endsWith(".pdf")) return "application/pdf";
-        if (lower.endsWith(".png")) return "image/png";
-        if (lower.endsWith(".jpg") || lower.endsWith(".jpeg")) return "image/jpeg";
-        if (lower.endsWith(".docx")) return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
-        if (lower.endsWith(".doc")) return "application/msword";
-        if (lower.endsWith(".xlsx")) return "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
-        if (lower.endsWith(".xls")) return "application/vnd.ms-excel";
-        if (lower.endsWith(".csv")) return "text/csv";
-        if (lower.endsWith(".mp4")) return "video/mp4";
-        if (lower.endsWith(".txt")) return "text/plain";
-        return "application/octet-stream";
-    }
 }
+
