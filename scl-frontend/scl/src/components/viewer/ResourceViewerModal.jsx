@@ -229,8 +229,7 @@ const ResourceViewerModal = ({ isOpen, onClose, note }) => {
                     </ul>
                   )}
                 </div>
-
-              
+              </div>
 
               {/* Action Buttons Panel */}
               <div className="pt-4 border-t border-base-300 space-y-2.5 shrink-0">
