@@ -6,7 +6,7 @@ server:
 
 app:
   cors:
-    allowed-origins: ${ALLOWED_ORIGINS:https://smart-collaborative-library.vercel.app,http://localhost:5173,http://localhost:3000}
+    allowed-origins: ${ALLOWED_ORIGINS:https://smart-collaborative-library.vercel.app,https://smart-collaborative-library-qpshxvsfj-whitedarkness.vercel.app,http://localhost:5173,http://localhost:3000}
 
 
 spring:
@@ -44,7 +44,7 @@ spring:
   liquibase:
     enabled: true
     change-log: classpath:/db/changelog/changelog-master.yaml
-    contexts: dev
+    # contexts can be overridden via LIQUIBASE_CONTEXTS env var; empty = run all changesets
     clear-checksums: true
 
   mail:
