@@ -19,6 +19,7 @@ import PrivateAiChatDrawer from './ai/PrivateAiChatDrawer.jsx';
 import RequestAccessModal from './collaboration/RequestAccessModal.jsx';
 import CollaborationWorkspaceModal from './collaboration/CollaborationWorkspaceModal.jsx';
 import ResourceDiscussionModal from './collaboration/ResourceDiscussionModal.jsx';
+import AuthPromptModal from './auth/AuthPromptModal.jsx';
 import { documentApi } from '../services/collaborationApi.js';
 import toast from 'react-hot-toast';
 import api from '../lib/axios.js';
@@ -35,6 +36,16 @@ const ResourceCard = ({ note, setNotes }) => {
   const [userRating, setUserRating] = useState(null);
   const [ratingLoading, setRatingLoading] = useState(false);
   const [showRatingMenu, setShowRatingMenu] = useState(false);
+  const [authPrompt, setAuthPrompt] = useState({ open: false, feature: '' });
+
+  // Guard: show login popup instead of acting when guest
+  const requireAuth = (feature, action) => {
+    if (!user) {
+      setAuthPrompt({ open: true, feature });
+      return;
+    }
+    action();
+  };
 
   const docId = note?.id || note?._id;
 
@@ -96,13 +107,15 @@ const ResourceCard = ({ note, setNotes }) => {
 
   const handleAiChatClick = (e) => {
     e.stopPropagation();
-    setShowAiDrawer(true);
+    requireAuth('chat with the AI Assistant', () => setShowAiDrawer(true));
   };
 
   const handleBookmarkToggle = (e) => {
     e.stopPropagation();
-    setIsBookmarked(!isBookmarked);
-    toast.success(isBookmarked ? "Removed from bookmarks" : "Bookmarked resource!");
+    requireAuth('bookmark resources', () => {
+      setIsBookmarked(!isBookmarked);
+      toast.success(isBookmarked ? "Removed from bookmarks" : "Bookmarked resource!");
+    });
   };
 
   const handleShare = (e) => {
@@ -112,7 +125,10 @@ const ResourceCard = ({ note, setNotes }) => {
   };
 
   const handleRate = async (ratingValue) => {
-    if (!user) { toast.error('Please log in to rate'); return; }
+    if (!user) {
+      setAuthPrompt({ open: true, feature: 'rate documents' });
+      return;
+    }
     if (ratingLoading) return;
     setRatingLoading(true);
     try {
@@ -392,10 +408,17 @@ const ResourceCard = ({ note, setNotes }) => {
         <ResourceDiscussionModal
           resourceId={docId}
           title={title}
-          isDocument={true}
           onClose={() => setShowDiscussionModal(false)}
+          isDocument={true}
         />
       )}
+
+      {/* Auth Prompt for Guests */}
+      <AuthPromptModal
+        isOpen={authPrompt.open}
+        onClose={() => setAuthPrompt({ open: false, feature: '' })}
+        feature={authPrompt.feature}
+      />
     </>
   );
 };

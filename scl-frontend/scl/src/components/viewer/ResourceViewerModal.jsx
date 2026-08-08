@@ -20,6 +20,7 @@ import PrivateAiChatDrawer from '../ai/PrivateAiChatDrawer.jsx';
 import RequestAccessModal from '../collaboration/RequestAccessModal.jsx';
 import CollaborationWorkspaceModal from '../collaboration/CollaborationWorkspaceModal.jsx';
 import ResourceDiscussionModal from '../collaboration/ResourceDiscussionModal.jsx';
+import AuthPromptModal from '../auth/AuthPromptModal.jsx';
 import { AuthContext } from '../../context/authContext.jsx';
 import { documentApi } from '../../services/collaborationApi.js';
 import toast from 'react-hot-toast';
@@ -32,6 +33,16 @@ const ResourceViewerModal = ({ isOpen, onClose, note }) => {
   const [showRequestAccessModal, setShowRequestAccessModal] = useState(false);
   const [showWorkspaceModal, setShowWorkspaceModal] = useState(false);
   const [showDiscussionModal, setShowDiscussionModal] = useState(false);
+  const [authPrompt, setAuthPrompt] = useState({ open: false, feature: '' });
+
+  // Guard: show login popup for unauthenticated users instead of acting
+  const requireAuth = (feature, action) => {
+    if (!user) {
+      setAuthPrompt({ open: true, feature });
+      return;
+    }
+    action();
+  };
 
   const docId = note?.id || note?._id;
   const [averageRating, setAverageRating] = useState(note.averageRating || note.rating || null);
@@ -90,27 +101,30 @@ const ResourceViewerModal = ({ isOpen, onClose, note }) => {
   ];
 
   const handleCollaborateClick = () => {
-    const docId = note.id || note._id;
-    const isOwner = Boolean(
-      user && note?.uploadedBy && (
-        note.uploadedBy.toLowerCase() === (user.email || '').toLowerCase() ||
-        note.uploadedBy.toLowerCase() === (user.username || '').toLowerCase() ||
-        note.uploadedBy.toLowerCase() === (user.name || '').toLowerCase() ||
-        note.uploadedBy.toLowerCase() === (user.fullName || '').toLowerCase()
-      )
-    );
-    const isMember = localStorage.getItem(`is_member_${docId}`) === 'true';
-
-    if (isOwner || isMember) {
-      setShowWorkspaceModal(true);
-    } else {
-      setShowRequestAccessModal(true);
-    }
+    requireAuth('collaborate on documents', () => {
+      const docId = note.id || note._id;
+      const isOwner = Boolean(
+        user && note?.uploadedBy && (
+          note.uploadedBy.toLowerCase() === (user.email || '').toLowerCase() ||
+          note.uploadedBy.toLowerCase() === (user.username || '').toLowerCase() ||
+          note.uploadedBy.toLowerCase() === (user.name || '').toLowerCase() ||
+          note.uploadedBy.toLowerCase() === (user.fullName || '').toLowerCase()
+        )
+      );
+      const isMember = localStorage.getItem(`is_member_${docId}`) === 'true';
+      if (isOwner || isMember) {
+        setShowWorkspaceModal(true);
+      } else {
+        setShowRequestAccessModal(true);
+      }
+    });
   };
 
   const handleBookmarkToggle = () => {
-    setIsBookmarked(!isBookmarked);
-    toast.success(isBookmarked ? "Removed from bookmarks" : "Bookmarked resource!");
+    requireAuth('bookmark resources', () => {
+      setIsBookmarked(!isBookmarked);
+      toast.success(isBookmarked ? "Removed from bookmarks" : "Bookmarked resource!");
+    });
   };
 
   const handleShare = () => {
@@ -233,15 +247,23 @@ const ResourceViewerModal = ({ isOpen, onClose, note }) => {
 
               {/* Action Buttons Panel */}
               <div className="pt-4 border-t border-base-300 space-y-2.5 shrink-0">
+                {/* Guest notice banner */}
+                {!user && (
+                  <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-warning/10 border border-warning/30 text-warning text-[11px] font-medium">
+                    <span>🔒</span>
+                    <span>Log in to unlock all features</span>
+                  </div>
+                )}
+
                 <button
-                  onClick={() => setShowAiDrawer(true)}
+                  onClick={() => requireAuth('chat with the AI Assistant', () => setShowAiDrawer(true))}
                   className="btn btn-sm btn-secondary w-full flex items-center justify-center gap-2 font-semibold shadow-xs"
                 >
                   <BotIcon className="size-4" /> Chat with AI Assistant
                 </button>
 
                 <button
-                  onClick={() => setShowDiscussionModal(true)}
+                  onClick={() => requireAuth('comment and discuss', () => setShowDiscussionModal(true))}
                   className="btn btn-sm btn-primary w-full flex items-center justify-center gap-2 font-semibold shadow-xs"
                 >
                   <MessageSquareIcon className="size-4" /> Discussion & Comments
@@ -315,6 +337,13 @@ const ResourceViewerModal = ({ isOpen, onClose, note }) => {
           onClose={() => setShowDiscussionModal(false)}
         />
       )}
+
+      {/* Auth Prompt for Guests */}
+      <AuthPromptModal
+        isOpen={authPrompt.open}
+        onClose={() => setAuthPrompt({ open: false, feature: '' })}
+        feature={authPrompt.feature}
+      />
     </>
   );
 };
