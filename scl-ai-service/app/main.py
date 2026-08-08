@@ -49,7 +49,10 @@ async def lifespan(app: FastAPI):
 
     # 1. Load embedding model
     logger.info("Loading embedding model...")
-    embedding_service = EmbeddingService(model_name=settings.EMBEDDING_MODEL)
+    embedding_service = EmbeddingService(
+        model_name=settings.EMBEDDING_MODEL,
+        api_key=settings.GOOGLE_API_KEY,
+    )
 
     # 2. Initialize FAISS vector store with persistence
     logger.info("Initializing FAISS vector store...")

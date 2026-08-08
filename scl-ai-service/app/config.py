@@ -12,8 +12,11 @@ class Settings(BaseSettings):
     GROQ_API_KEY: str = ""
     GROQ_MODEL: str = "llama-3.1-8b-instant"
 
-    # Embedding model
-    EMBEDDING_MODEL: str = "all-MiniLM-L6-v2"
+    # Google Generative AI (Gemini embeddings)
+    GOOGLE_API_KEY: str = ""
+
+    # Embedding model (Gemini API — no local torch required)
+    EMBEDDING_MODEL: str = "models/text-embedding-004"
 
     # File handling
     UPLOAD_DIR: str = "uploads"
