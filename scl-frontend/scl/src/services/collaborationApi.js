@@ -179,3 +179,11 @@ export const documentApi = {
   },
 };
 
+export const recommendationApi = {
+  getRecommendations: async () => {
+    const res = await api.get('/recommendations');
+    return res.data.data || [];
+  },
+};
+
+
