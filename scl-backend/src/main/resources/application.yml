@@ -6,7 +6,7 @@ server:
 
 app:
   cors:
-    allowed-origins: ${ALLOWED_ORIGINS:https://smart-collaborative-library.vercel.app,https://smart-collaborative-library-qpshxvsfj-whitedarkness.vercel.app,http://localhost:5173,http://localhost:3000}
+    allowed-origins: ${ALLOWED_ORIGINS:https://*.vercel.app,https://smart-collaborative-library.vercel.app,http://localhost:5173,http://localhost:3000}
 
 
 spring:

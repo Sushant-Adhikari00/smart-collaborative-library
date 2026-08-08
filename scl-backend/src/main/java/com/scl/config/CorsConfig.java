@@ -10,6 +10,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -27,11 +28,21 @@ public class CorsConfig {
                 .filter(s -> !s.isEmpty())
                 .toList();
 
-        // setAllowedOriginPatterns supports credentials + wildcard patterns
+        // setAllowedOriginPatterns supports credentials + wildcard patterns (e.g., https://*.vercel.app)
         if (origins.isEmpty() || origins.contains("*")) {
             configuration.setAllowedOriginPatterns(List.of("*"));
         } else {
-            configuration.setAllowedOriginPatterns(origins);
+            List<String> mutableOrigins = new ArrayList<>(origins);
+            if (!mutableOrigins.contains("https://*.vercel.app")) {
+                mutableOrigins.add("https://*.vercel.app");
+            }
+            if (!mutableOrigins.contains("https://*.onrender.com")) {
+                mutableOrigins.add("https://*.onrender.com");
+            }
+            if (!mutableOrigins.contains("http://localhost:*")) {
+                mutableOrigins.add("http://localhost:*");
+            }
+            configuration.setAllowedOriginPatterns(mutableOrigins);
         }
 
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD"));
