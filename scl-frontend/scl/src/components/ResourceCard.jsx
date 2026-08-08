@@ -51,14 +51,19 @@ const ResourceCard = ({ note, setNotes }) => {
       .catch(() => { /* silent fallback */ });
   }, [docId]);
 
+  const isAdmin = Boolean(user && (user.role === 'ROLE_ADMIN' || user.role === 'admin' || user.role === 'ADMIN'));
   const isOwner = Boolean(
-    user && note?.uploadedBy && (
-      note.uploadedBy.toLowerCase() === (user.email || '').toLowerCase() ||
-      note.uploadedBy.toLowerCase() === (user.username || '').toLowerCase() ||
-      note.uploadedBy.toLowerCase() === (user.name || '').toLowerCase() ||
-      note.uploadedBy.toLowerCase() === (user.fullName || '').toLowerCase()
+    user && (
+      (note?.uploadedBy && (
+        note.uploadedBy.toLowerCase() === (user.email || '').toLowerCase() ||
+        note.uploadedBy.toLowerCase() === (user.username || '').toLowerCase() ||
+        note.uploadedBy.toLowerCase() === (user.name || '').toLowerCase() ||
+        note.uploadedBy.toLowerCase() === (user.fullName || '').toLowerCase()
+      )) ||
+      (note?.userId && String(note.userId) === String(user.id))
     )
   );
+  const canDelete = isOwner || isAdmin;
   const isVerified = note.isVerified || note.teacherVerified || note.category === 'Lecture Notes' || true;
 
   const title = note.title || 'Untitled Document';
@@ -325,13 +330,13 @@ const ResourceCard = ({ note, setNotes }) => {
               <Share2Icon className="size-3.5" />
             </button>
 
-            {isOwner && (
+            {canDelete && (
               <button
                 onClick={handleDelete}
-                className="p-1 rounded-md text-error hover:bg-error/10 transition-colors"
+                className="p-1.5 rounded-md text-error hover:bg-error/10 border border-error/20 flex items-center gap-1 text-[10px] font-bold transition-all"
                 title="Delete Document"
               >
-                <Trash2Icon className="size-3.5" />
+                <Trash2Icon className="size-3.5" /> Delete
               </button>
             )}
           </div>

@@ -12,7 +12,8 @@ import {
   FileTextIcon, 
   SparklesIcon, 
   TagIcon, 
-  BookOpenIcon 
+  BookOpenIcon,
+  Trash2Icon
 } from 'lucide-react';
 import PdfViewer from './PdfViewer.jsx';
 import PrivateAiChatDrawer from '../ai/PrivateAiChatDrawer.jsx';
@@ -22,6 +23,7 @@ import ResourceDiscussionModal from '../collaboration/ResourceDiscussionModal.js
 import { AuthContext } from '../../context/authContext.jsx';
 import { documentApi } from '../../services/collaborationApi.js';
 import toast from 'react-hot-toast';
+import api from '../../lib/axios.js';
 
 const ResourceViewerModal = ({ isOpen, onClose, note }) => {
   const { user } = useContext(AuthContext);
@@ -46,6 +48,33 @@ const ResourceViewerModal = ({ isOpen, onClose, note }) => {
   }, [isOpen, docId]);
 
   if (!isOpen || !note) return null;
+
+  const isAdmin = Boolean(user && (user.role === 'ROLE_ADMIN' || user.role === 'admin' || user.role === 'ADMIN'));
+  const isOwner = Boolean(
+    user && (
+      (note?.uploadedBy && (
+        note.uploadedBy.toLowerCase() === (user.email || '').toLowerCase() ||
+        note.uploadedBy.toLowerCase() === (user.username || '').toLowerCase() ||
+        note.uploadedBy.toLowerCase() === (user.name || '').toLowerCase() ||
+        note.uploadedBy.toLowerCase() === (user.fullName || '').toLowerCase()
+      )) ||
+      (note?.userId && String(note.userId) === String(user.id))
+    )
+  );
+  const canDelete = isOwner || isAdmin;
+
+  const handleDelete = async () => {
+    if (!window.confirm("Are you sure you want to delete this document?")) return;
+    try {
+      await api.delete(`/documents/${docId}`);
+      toast.success("Document deleted successfully");
+      onClose();
+      window.location.reload();
+    } catch (err) {
+      console.error("Delete document error:", err);
+      toast.error(err?.response?.data?.message || "Failed to delete document");
+    }
+  };
 
   const isVerified = note.isVerified || note.teacherVerified || note.category === 'Lecture Notes' || true;
   const rating = averageRating != null ? Number(averageRating).toFixed(1) : '—';
@@ -255,6 +284,15 @@ const ResourceViewerModal = ({ isOpen, onClose, note }) => {
                     <Share2Icon className="size-3" /> Share
                   </button>
                 </div>
+
+                {canDelete && (
+                  <button
+                    onClick={handleDelete}
+                    className="btn btn-xs btn-error btn-outline w-full flex items-center justify-center gap-1 font-bold mt-2"
+                  >
+                    <Trash2Icon className="size-3.5" /> Delete Resource
+                  </button>
+                )}
               </div>
             </div>
           </div>
