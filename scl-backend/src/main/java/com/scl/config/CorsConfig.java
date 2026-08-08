@@ -3,9 +3,11 @@ package com.scl.config;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.filter.CorsFilter;
 
 import java.util.Arrays;
 import java.util.List;
@@ -17,16 +19,15 @@ public class CorsConfig {
     private String allowedOrigins;
 
     @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
+    @Order(Ordered.HIGHEST_PRECEDENCE)
+    public CorsFilter corsFilter() {
         CorsConfiguration configuration = new CorsConfiguration();
         
-        // Parse origins and trim whitespace
         List<String> origins = Arrays.stream(allowedOrigins.split(","))
                 .map(String::trim)
                 .filter(s -> !s.isEmpty())
                 .toList();
 
-        // Use allowedOriginPatterns to support wildcards like *.vercel.app while supporting credentials
         if (origins.isEmpty() || origins.contains("*")) {
             configuration.setAllowedOriginPatterns(List.of("*"));
         } else {
@@ -41,6 +42,6 @@ public class CorsConfig {
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
-        return source;
+        return new CorsFilter(source);
     }
 }
