@@ -25,7 +25,8 @@ const client = new Client({
       console.warn('[STOMP] No JWT token available, skipping WebSocket connection.');
       return null;
     }
-    const url = `http://localhost:8080/ws?token=${token}`;
+    const wsBase = import.meta.env.VITE_WS_BASE_URL || "http://localhost:8080";
+    const url = `${wsBase}/ws?token=${token}`;
     return new SockJS(url);
   },
   reconnectDelay: 3000,

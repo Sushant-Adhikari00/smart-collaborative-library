@@ -1,5 +1,5 @@
 server:
-  port: 8080
+  port: ${PORT:8080}
   tomcat:
     basedir: ./tomcat-temp
 
@@ -7,7 +7,7 @@ app:
   upload:
     dir: uploads/documents
   cors:
-    allowed-origins: http://localhost:5173,http://localhost:3000
+    allowed-origins: ${ALLOWED_ORIGINS:https://smart-collaborative-library.vercel.app,http://localhost:5173,http://localhost:3000}
 
 spring:
   application:
@@ -59,7 +59,7 @@ supabase:
   bucket: Porject_files
 
 ai-service:
-  url: ${AI_SERVICE_URL:http://localhost:8000}
+  url: ${AI_SERVICE_URL:https://scl-ai-service.onrender.com}
 
 jwt:
   # The secret key for signing JWTs. This should be a long, random string in production!

@@ -1,19 +1,21 @@
 version: "3.8"
 
 services:
-  mysql:
-    image: mysql:8.0
-    container_name: scl_mysql_db
-    restart: always
-    environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: scl_db
-      MYSQL_USER: scl_user
-      MYSQL_PASSWORD: scl_pass
+  scl-backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: scl_backend_app
     ports:
-      - "3306:3306"
-    volumes:
-      - mysql_data:/var/lib/mysql
-
-volumes:
-  mysql_data:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+      - DB_URL=${DB_URL}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - JWT_SECRET=${JWT_SECRET}
+      - AI_SERVICE_URL=${AI_SERVICE_URL:-https://scl-ai-service.onrender.com}
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-https://smart-collaborative-library.vercel.app,http://localhost:5173}
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_KEY=${SUPABASE_KEY}
+    restart: unless-stopped

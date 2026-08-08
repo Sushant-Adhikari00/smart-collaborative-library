@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: scl-backend
+    env: docker
+    dockerfilePath: Dockerfile
+    dockerContext: .
+    plan: free
+    region: singapore
+    envVars:
+      - key: PORT
+        value: "8080"
+      - key: AI_SERVICE_URL
+        value: "https://scl-ai-service.onrender.com"
+      - key: ALLOWED_ORIGINS
+        value: "https://smart-collaborative-library.vercel.app,http://localhost:5173"
+      - key: DB_URL
+        sync: false
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_KEY
+        sync: false
