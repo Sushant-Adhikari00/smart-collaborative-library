@@ -17,7 +17,10 @@ import {
   GripVerticalIcon,
   RefreshCwIcon,
   Maximize2Icon,
-  Minimize2Icon
+  Minimize2Icon,
+  PaletteIcon,
+  SunIcon,
+  MoonIcon
 } from 'lucide-react';
 import api from '../../lib/axios.js';
 import toast from 'react-hot-toast';
@@ -42,6 +45,12 @@ const PrivateAiChatDrawer = ({ isOpen, onClose, note }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [showScrollBottom, setShowScrollBottom] = useState(false);
 
+  // Dynamic Theme State
+  const [chatTheme, setChatTheme] = useState(() => {
+    return localStorage.getItem('ai_chat_theme') || 'auto';
+  });
+  const [showThemePicker, setShowThemePicker] = useState(false);
+
   // Dynamic Sidebar Width State (in pixels)
   const [sidebarWidth, setSidebarWidth] = useState(440);
   const [isWide, setIsWide] = useState(false);
@@ -50,6 +59,21 @@ const PrivateAiChatDrawer = ({ isOpen, onClose, note }) => {
 
   // Web Speech Recognition setup
   const recognitionRef = useRef(null);
+
+  const themeOptions = [
+    { id: 'auto', label: 'Sync Site Theme' },
+    { id: 'retro', label: 'Retro Warm' },
+    { id: 'cyberpunk', label: 'Cyberpunk Neon' },
+    { id: 'synthwave', label: 'Synthwave' },
+    { id: 'dark', label: 'Classic Dark' },
+    { id: 'light', label: 'Classic Light' },
+    { id: 'dracula', label: 'Dracula Gothic' },
+    { id: 'emerald', label: 'Academic Emerald' },
+    { id: 'cupcake', label: 'Soft Cupcake' },
+    { id: 'dim', label: 'Dim Charcoal' },
+    { id: 'nord', label: 'Nordic Slate' },
+    { id: 'sunset', label: 'Sunset Amber' }
+  ];
 
   useEffect(() => {
     if (!isCollapsed) {
@@ -85,6 +109,16 @@ const PrivateAiChatDrawer = ({ isOpen, onClose, note }) => {
       recognitionRef.current = recognition;
     }
   }, []);
+
+  const handleThemeChange = (newTheme) => {
+    setChatTheme(newTheme);
+    localStorage.setItem('ai_chat_theme', newTheme);
+    setShowThemePicker(false);
+    toast.success(`AI Chat theme set to ${newTheme.toUpperCase()}`);
+  };
+
+  // Determine active dynamic theme
+  const activeTheme = chatTheme === 'auto' ? (localStorage.getItem('theme') || 'retro') : chatTheme;
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -189,7 +223,6 @@ const PrivateAiChatDrawer = ({ isOpen, onClose, note }) => {
 
     const handleMouseMove = (moveEvent) => {
       if (!isResizingRef.current) return;
-      // Dragging left increases width
       const deltaX = dragStartRef.current.startX - moveEvent.clientX;
       const newW = Math.min(Math.max(dragStartRef.current.initialW + deltaX, 320), Math.min(750, window.innerWidth - 60));
       setSidebarWidth(newW);
@@ -221,9 +254,9 @@ const PrivateAiChatDrawer = ({ isOpen, onClose, note }) => {
     }
   };
 
-  // Render via React Portal directly into document.body
+  // Render via React Portal directly into document.body with dynamic data-theme
   const content = (
-    <div className="font-sans">
+    <div className="font-sans" data-theme={activeTheme}>
       {/* Collapsed Ribbon Button fixed to right edge of screen */}
       {isCollapsed ? (
         <div className="fixed top-1/2 -translate-y-1/2 right-0 z-[99999] animate-bounce-short">
@@ -240,12 +273,12 @@ const PrivateAiChatDrawer = ({ isOpen, onClose, note }) => {
           </button>
         </div>
       ) : (
-        /* Full Screen-Fixed Right Side Panel */
+        /* Full Screen-Fixed Right Side Panel with Dynamic Theme */
         <div 
-          className="fixed top-0 bottom-0 right-0 h-screen max-h-screen z-[99999] bg-base-100 shadow-2xl border-l border-base-300 flex flex-col transition-all duration-75"
+          className="fixed top-0 bottom-0 right-0 h-screen max-h-screen z-[99999] bg-base-100 text-base-content shadow-2xl border-l border-base-300 flex flex-col transition-all duration-75"
           style={{ width: `${sidebarWidth}px`, maxWidth: '94vw' }}
         >
-          {/* Dynamic Drag Handle on Left Edge to Resize Sidebar Width */}
+          {/* Dynamic Drag Handle on Left Edge */}
           <div
             onMouseDown={handleResizeStart}
             onDoubleClick={resetWidth}
@@ -256,7 +289,7 @@ const PrivateAiChatDrawer = ({ isOpen, onClose, note }) => {
           </div>
 
           {/* Header Bar */}
-          <div className="px-4 py-3 border-b border-base-300 flex items-center justify-between bg-base-200/90 shrink-0 select-none">
+          <div className="px-4 py-3 border-b border-base-300 flex items-center justify-between bg-base-200/90 shrink-0 select-none relative">
             <div className="flex items-center gap-2.5 min-w-0">
               <div className="relative p-1.5 rounded-lg bg-secondary/15 text-secondary shrink-0">
                 <BotIcon className="size-5" />
@@ -265,14 +298,48 @@ const PrivateAiChatDrawer = ({ isOpen, onClose, note }) => {
               <div className="min-w-0">
                 <h3 className="font-bold text-xs flex items-center gap-1.5 leading-tight truncate">
                   <span className="truncate">{note?.title || 'AI Assistant'}</span>
-                  <span className="badge badge-xs badge-secondary text-[9px] shrink-0">Screen Fixed</span>
+                  <span className="badge badge-xs badge-secondary text-[9px] capitalize shrink-0">{activeTheme}</span>
                 </h3>
-                <p className="text-[10px] text-base-content/60 truncate">Right Side Panel • Resizable Width</p>
+                <p className="text-[10px] text-base-content/60 truncate">Dynamic Theme & Side Panel</p>
               </div>
             </div>
 
             {/* Action Buttons */}
-            <div className="flex items-center gap-1 shrink-0">
+            <div className="flex items-center gap-0.5 shrink-0">
+              {/* Dynamic Theme Picker Button */}
+              <div className="relative">
+                <button
+                  onClick={() => setShowThemePicker(!showThemePicker)}
+                  className="btn btn-ghost btn-xs btn-square hover:bg-base-300 text-secondary"
+                  title="Change AI Chat Theme"
+                >
+                  <PaletteIcon className="size-4" />
+                </button>
+
+                {/* Theme Selector Dropdown */}
+                {showThemePicker && (
+                  <div className="absolute right-0 top-8 z-50 w-48 bg-base-100 border border-base-300 rounded-xl shadow-2xl p-1.5 space-y-1 text-xs">
+                    <div className="px-2 py-1 font-bold text-[11px] text-base-content/50 uppercase tracking-wider border-b border-base-200">
+                      Select Theme
+                    </div>
+                    <div className="max-h-48 overflow-y-auto custom-scrollbar space-y-0.5">
+                      {themeOptions.map((t) => (
+                        <button
+                          key={t.id}
+                          onClick={() => handleThemeChange(t.id)}
+                          className={`w-full text-left px-2.5 py-1.5 rounded-lg flex items-center justify-between text-xs transition-colors ${
+                            chatTheme === t.id ? 'bg-primary text-primary-content font-bold' : 'hover:bg-base-200'
+                          }`}
+                        >
+                          <span>{t.label}</span>
+                          {chatTheme === t.id && <CheckIcon className="size-3" />}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
               <button 
                 onClick={resetWidth} 
                 className="btn btn-ghost btn-xs btn-square hover:bg-base-300" 
