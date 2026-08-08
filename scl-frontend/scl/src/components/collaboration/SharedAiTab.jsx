@@ -59,7 +59,7 @@ const SharedAiTab = ({ documentId, title }) => {
   };
 
   return (
-    <div className="flex flex-col h-full bg-base-100 p-4 space-y-4 overflow-y-auto">
+    <div className="flex flex-col h-full bg-base-100 p-4 space-y-4 overflow-y-auto custom-scrollbar scroll-smooth">
       {/* Header Banner */}
       <div className="bg-secondary/10 border border-secondary/20 p-3 rounded-xl flex items-center justify-between">
         <div className="flex items-center gap-2">

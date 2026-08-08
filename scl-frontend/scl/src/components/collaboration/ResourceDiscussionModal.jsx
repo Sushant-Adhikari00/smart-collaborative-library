@@ -101,8 +101,8 @@ export default function ResourceDiscussionModal({ resourceId, onClose, title, is
   if (!resourceId) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-2 sm:p-4">
-      <div className="bg-base-100 border border-base-300 rounded-2xl w-full max-w-2xl p-4 sm:p-6 shadow-2xl space-y-3 sm:space-y-4 max-h-[92vh] sm:max-h-[85vh] flex flex-col text-base-content">
+    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-2 sm:p-4 overflow-hidden">
+      <div className="bg-base-100 border border-base-300 rounded-2xl w-full max-w-2xl p-4 sm:p-6 shadow-2xl space-y-3 sm:space-y-4 max-h-[92vh] sm:max-h-[85vh] my-auto flex flex-col text-base-content overflow-hidden">
 
         {/* Header */}
         <div className="flex items-center justify-between border-b border-base-300 pb-3 shrink-0 gap-2">
@@ -130,7 +130,7 @@ export default function ResourceDiscussionModal({ resourceId, onClose, title, is
         </div>
 
         {/* Comment Thread List */}
-        <div className="flex-1 overflow-y-auto space-y-3 p-1">
+        <div className="flex-1 overflow-y-auto custom-scrollbar space-y-3 p-1">
           {loading ? (
             <div className="flex flex-col items-center justify-center p-8 gap-2">
               <span className="loading loading-spinner loading-md text-primary" />

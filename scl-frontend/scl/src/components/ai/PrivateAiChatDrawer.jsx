@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { 
   BotIcon, 
   XIcon, 
@@ -9,13 +9,15 @@ import {
   Trash2Icon, 
   MicIcon, 
   BookOpenIcon,
-  CheckIcon
+  CheckIcon,
+  ArrowDownIcon
 } from 'lucide-react';
 import api from '../../lib/axios.js';
 import toast from 'react-hot-toast';
 
 const PrivateAiChatDrawer = ({ isOpen, onClose, note }) => {
   const docId = note?.id || note?._id;
+  const messagesEndRef = useRef(null);
   const [messages, setMessages] = useState([
     {
       role: 'assistant',
@@ -27,6 +29,10 @@ const PrivateAiChatDrawer = ({ isOpen, onClose, note }) => {
   const [loading, setLoading] = useState(false);
   const [copiedIndex, setCopiedIndex] = useState(null);
   const [isVoiceActive, setIsVoiceActive] = useState(false);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, loading]);
 
   const suggestedPrompts = [
     "Summarize the key takeaways",
@@ -98,9 +104,9 @@ const PrivateAiChatDrawer = ({ isOpen, onClose, note }) => {
   };
 
   return (
-    <div className="fixed inset-y-0 right-0 z-50 w-full max-w-md bg-base-100 shadow-2xl border-l border-base-300 flex flex-col transition-all">
+    <div className="fixed inset-y-0 right-0 z-50 h-screen max-h-screen w-full max-w-md sm:max-w-lg bg-base-100 shadow-2xl border-l border-base-300 flex flex-col transition-all">
       {/* Header */}
-      <div className="px-4 py-3 border-b border-base-300 flex items-center justify-between bg-base-200/50">
+      <div className="px-4 py-3 border-b border-base-300 flex items-center justify-between bg-base-200/50 shrink-0">
         <div className="flex items-center gap-2">
           <div className="p-1.5 rounded-lg bg-secondary/10 text-secondary">
             <BotIcon className="size-5" />
@@ -124,7 +130,7 @@ const PrivateAiChatDrawer = ({ isOpen, onClose, note }) => {
       </div>
 
       {/* Suggested Prompts Banner */}
-      <div className="p-3 bg-base-200/30 border-b border-base-300 overflow-x-auto whitespace-nowrap scrollbar-none flex gap-2">
+      <div className="p-3 bg-base-200/30 border-b border-base-300 overflow-x-auto whitespace-nowrap custom-scrollbar flex gap-2 shrink-0">
         {suggestedPrompts.map((prompt, idx) => (
           <button
             key={idx}
@@ -137,8 +143,8 @@ const PrivateAiChatDrawer = ({ isOpen, onClose, note }) => {
         ))}
       </div>
 
-      {/* Message List */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      {/* Message List - Scrollable with Wheel */}
+      <div className="flex-1 overflow-y-auto scroll-smooth custom-scrollbar p-4 space-y-4">
         {messages.map((msg, i) => (
           <div key={i} className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
             <div
@@ -193,10 +199,11 @@ const PrivateAiChatDrawer = ({ isOpen, onClose, note }) => {
             </div>
           </div>
         )}
+        <div ref={messagesEndRef} />
       </div>
 
       {/* Footer Input */}
-      <form onSubmit={(e) => { e.preventDefault(); handleSendMessage(); }} className="p-3 border-t border-base-300 bg-base-100 flex items-center gap-2">
+      <form onSubmit={(e) => { e.preventDefault(); handleSendMessage(); }} className="p-3 border-t border-base-300 bg-base-100 flex items-center gap-2 shrink-0">
         <button
           type="button"
           onClick={() => {

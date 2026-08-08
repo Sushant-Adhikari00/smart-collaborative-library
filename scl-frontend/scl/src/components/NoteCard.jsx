@@ -335,10 +335,10 @@ const NoteCard = ({ note, setNotes }) => {
 
       {/* ---- AI Chat Modal ---- */}
       {showChat && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-base-100 rounded-2xl shadow-2xl w-full max-w-lg flex flex-col" style={{ height: "70vh" }}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-hidden">
+          <div className="bg-base-100 rounded-2xl shadow-2xl w-full max-w-lg my-auto flex flex-col" style={{ height: "70vh", maxHeight: "70vh" }}>
             {/* Modal Header */}
-            <div className="flex items-center justify-between p-4 border-b border-base-300">
+            <div className="flex items-center justify-between p-4 border-b border-base-300 shrink-0">
               <div className="flex items-center gap-2">
                 <BotIcon className="size-5 text-secondary" />
                 <div>
@@ -352,7 +352,7 @@ const NoteCard = ({ note, setNotes }) => {
             </div>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-3">
+            <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-3">
               {chatMessages.map((msg, i) => (
                 <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
                   <div
@@ -395,10 +395,10 @@ const NoteCard = ({ note, setNotes }) => {
 
       {/* ---- Collaborate Modal (Group Chat) ---- */}
       {showCollaborate && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-base-100 rounded-2xl shadow-2xl w-full max-w-lg flex flex-col" style={{ height: "70vh" }}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-hidden">
+          <div className="bg-base-100 rounded-2xl shadow-2xl w-full max-w-lg my-auto flex flex-col" style={{ height: "70vh", maxHeight: "70vh" }}>
             {/* Header */}
-            <div className="flex items-center justify-between p-4 border-b border-base-300">
+            <div className="flex items-center justify-between p-4 border-b border-base-300 shrink-0">
               <div className="flex items-center gap-2">
                 <UsersIcon className="size-5 text-accent" />
                 <div>
@@ -412,7 +412,7 @@ const NoteCard = ({ note, setNotes }) => {
             </div>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-3">
+            <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-3">
               {safeCollabMessages.length === 0 && !collabLoading && (
                 <div className="text-center text-xs text-base-content/50 py-8">
                   No messages yet. Be the first to start the discussion!

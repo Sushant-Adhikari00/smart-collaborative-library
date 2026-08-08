@@ -91,9 +91,9 @@ const ResourceViewerModal = ({ isOpen, onClose, note }) => {
 
   return (
     <>
-      <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/75 backdrop-blur-md p-4 overflow-hidden">
-        {/* Main 80-90% Modal Container */}
-        <div className="bg-base-100 rounded-2xl shadow-2xl w-full max-w-7xl h-[88vh] flex flex-col overflow-hidden border border-base-300">
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-md p-2 sm:p-4 overflow-hidden">
+        {/* Main 80-90% Centered Modal Container */}
+        <div className="bg-base-100 rounded-2xl shadow-2xl w-full max-w-7xl h-[88vh] max-h-[88vh] my-auto flex flex-col overflow-hidden border border-base-300">
           
           {/* Header Bar */}
           <div className="bg-base-200/90 px-4 md:px-6 py-3 border-b border-base-300 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0">
@@ -154,7 +154,7 @@ const ResourceViewerModal = ({ isOpen, onClose, note }) => {
             </div>
 
             {/* Right Side - Document Metadata & Actions */}
-            <div className="w-full lg:w-[32%] h-auto lg:h-full overflow-y-auto p-4 sm:p-5 bg-base-100 flex flex-col justify-between space-y-5">
+            <div className="w-full lg:w-[32%] h-auto lg:h-full overflow-y-auto custom-scrollbar p-4 sm:p-5 bg-base-100 flex flex-col justify-between space-y-5">
               <div className="space-y-5">
                 {/* Description Section */}
                 <div>
