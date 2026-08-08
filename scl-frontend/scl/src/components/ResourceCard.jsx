@@ -150,15 +150,27 @@ const ResourceCard = ({ note, setNotes }) => {
       >
         {/* Card Header Cover Gradient */}
         <div className="relative h-28 w-full bg-gradient-to-br from-primary/5 via-secondary/5 to-accent/5 p-4 flex flex-col justify-between border-b border-base-content/5">
-          {/* File Type and Verified Status */}
-          <div className="flex items-center justify-between">
-            <span className="px-2.5 py-0.5 rounded-full bg-base-200/80 text-[10px] font-mono font-bold tracking-wider text-base-content border border-base-content/5 shadow-2xs">
-              {fileType}
-            </span>
-            {isVerified && (
-              <span className="flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-success/10 text-[10px] font-bold text-success border border-success/20 shadow-2xs">
-                <CheckCircle2Icon className="size-3" /> Verified
+          {/* File Type, Verified Status, and Top Delete Action */}
+          <div className="flex items-center justify-between gap-1">
+            <div className="flex items-center gap-1.5">
+              <span className="px-2.5 py-0.5 rounded-full bg-base-200/80 text-[10px] font-mono font-bold tracking-wider text-base-content border border-base-content/5 shadow-2xs">
+                {fileType}
               </span>
+              {isVerified && (
+                <span className="flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-success/10 text-[10px] font-bold text-success border border-success/20 shadow-2xs">
+                  <CheckCircle2Icon className="size-3" /> Verified
+                </span>
+              )}
+            </div>
+
+            {canDelete && (
+              <button
+                onClick={handleDelete}
+                className="btn btn-xs btn-error btn-outline hover:btn-error gap-1 px-2 text-[10px] font-bold shadow-sm z-10"
+                title="Delete Document"
+              >
+                <Trash2Icon className="size-3" /> Delete
+              </button>
             )}
           </div>
 
