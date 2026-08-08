@@ -45,7 +45,8 @@ const PrivateAiChatDrawer = ({ isOpen, onClose, note }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [showScrollBottom, setShowScrollBottom] = useState(false);
 
-  // Dynamic Theme State
+  // Dynamic Site & Chat Theme State
+  const [siteTheme, setSiteTheme] = useState(() => localStorage.getItem('theme') || 'retro');
   const [chatTheme, setChatTheme] = useState(() => {
     return localStorage.getItem('ai_chat_theme') || 'auto';
   });
@@ -61,19 +62,34 @@ const PrivateAiChatDrawer = ({ isOpen, onClose, note }) => {
   const recognitionRef = useRef(null);
 
   const themeOptions = [
-    { id: 'auto', label: 'Sync Site Theme' },
-    { id: 'retro', label: 'Retro Warm' },
+    { id: 'auto', label: 'Sync Site Theme (Auto)' },
+    { id: 'retro', label: 'Retro Light' },
+    { id: 'youtubeDark', label: 'YouTube Dark' },
+    { id: 'light', label: 'Classic Light' },
+    { id: 'dark', label: 'Classic Dark' },
     { id: 'cyberpunk', label: 'Cyberpunk Neon' },
     { id: 'synthwave', label: 'Synthwave' },
-    { id: 'dark', label: 'Classic Dark' },
-    { id: 'light', label: 'Classic Light' },
     { id: 'dracula', label: 'Dracula Gothic' },
     { id: 'emerald', label: 'Academic Emerald' },
     { id: 'cupcake', label: 'Soft Cupcake' },
     { id: 'dim', label: 'Dim Charcoal' },
-    { id: 'nord', label: 'Nordic Slate' },
-    { id: 'sunset', label: 'Sunset Amber' }
+    { id: 'nord', label: 'Nordic Slate' }
   ];
+
+  // Real-time synchronization with website Sun/Moon theme toggle
+  useEffect(() => {
+    const syncTheme = () => {
+      const current = localStorage.getItem('theme') || 'retro';
+      setSiteTheme(current);
+    };
+
+    window.addEventListener('storage', syncTheme);
+    const interval = setInterval(syncTheme, 400); // Reactive polling for theme updates
+    return () => {
+      window.removeEventListener('storage', syncTheme);
+      clearInterval(interval);
+    };
+  }, []);
 
   useEffect(() => {
     if (!isCollapsed) {
@@ -114,11 +130,11 @@ const PrivateAiChatDrawer = ({ isOpen, onClose, note }) => {
     setChatTheme(newTheme);
     localStorage.setItem('ai_chat_theme', newTheme);
     setShowThemePicker(false);
-    toast.success(`AI Chat theme set to ${newTheme.toUpperCase()}`);
+    toast.success(`AI Chat theme set to ${newTheme === 'auto' ? 'Sync Site Theme' : newTheme.toUpperCase()}`);
   };
 
-  // Determine active dynamic theme
-  const activeTheme = chatTheme === 'auto' ? (localStorage.getItem('theme') || 'retro') : chatTheme;
+  // Active theme calculation
+  const activeTheme = chatTheme === 'auto' ? siteTheme : chatTheme;
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -318,11 +334,12 @@ const PrivateAiChatDrawer = ({ isOpen, onClose, note }) => {
 
                 {/* Theme Selector Dropdown */}
                 {showThemePicker && (
-                  <div className="absolute right-0 top-8 z-50 w-48 bg-base-100 border border-base-300 rounded-xl shadow-2xl p-1.5 space-y-1 text-xs">
-                    <div className="px-2 py-1 font-bold text-[11px] text-base-content/50 uppercase tracking-wider border-b border-base-200">
-                      Select Theme
+                  <div className="absolute right-0 top-8 z-50 w-52 bg-base-100 text-base-content border border-base-300 rounded-xl shadow-2xl p-1.5 space-y-1 text-xs">
+                    <div className="px-2 py-1 font-bold text-[11px] text-base-content/50 uppercase tracking-wider border-b border-base-200 flex items-center justify-between">
+                      <span>Select Theme</span>
+                      <span className="text-[10px] capitalize text-primary font-mono">{activeTheme}</span>
                     </div>
-                    <div className="max-h-48 overflow-y-auto custom-scrollbar space-y-0.5">
+                    <div className="max-h-52 overflow-y-auto custom-scrollbar space-y-0.5">
                       {themeOptions.map((t) => (
                         <button
                           key={t.id}
