@@ -25,7 +25,10 @@ const client = new Client({
       console.warn('[STOMP] No JWT token available, skipping WebSocket connection.');
       return null;
     }
-    const wsBase = import.meta.env.VITE_WS_BASE_URL || "http://localhost:8080";
+    const defaultWsUrl = import.meta.env.PROD
+      ? "https://smart-collaborative-library-1.onrender.com"
+      : "http://localhost:8080";
+    const wsBase = import.meta.env.VITE_WS_BASE_URL || defaultWsUrl;
     const url = `${wsBase}/ws?token=${token}`;
     return new SockJS(url);
   },

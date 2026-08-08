@@ -1,7 +1,11 @@
 import axios from "axios";
 
+const defaultApiUrl = import.meta.env.PROD
+  ? "https://smart-collaborative-library-1.onrender.com/api/v1"
+  : "http://localhost:8080/api/v1";
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api/v1",
+  baseURL: import.meta.env.VITE_API_BASE_URL || defaultApiUrl,
 });
 
 api.interceptors.request.use(
