@@ -14,7 +14,10 @@ import {
   MinusIcon,
   Maximize2Icon,
   Minimize2Icon,
-  ArrowDownIcon
+  ArrowDownIcon,
+  GripHorizontalIcon,
+  MaximizeIcon,
+  RefreshCwIcon
 } from 'lucide-react';
 import api from '../../lib/axios.js';
 import toast from 'react-hot-toast';
@@ -24,6 +27,7 @@ const PrivateAiChatDrawer = ({ isOpen, onClose, note }) => {
   const messagesEndRef = useRef(null);
   const scrollContainerRef = useRef(null);
   
+  // Messages & Input State
   const [messages, setMessages] = useState([
     {
       role: 'assistant',
@@ -36,14 +40,53 @@ const PrivateAiChatDrawer = ({ isOpen, onClose, note }) => {
   const [copiedIndex, setCopiedIndex] = useState(null);
   const [isVoiceActive, setIsVoiceActive] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
-  const [isTall, setIsTall] = useState(false); // Facebook-style extra long height toggle
   const [showScrollBottom, setShowScrollBottom] = useState(false);
+
+  // Dynamic Window Sizing & Position State
+  const [dimensions, setDimensions] = useState({ width: 420, height: 640 });
+  const [isMaximized, setIsMaximized] = useState(false);
+  const [position, setPosition] = useState({ x: 0, y: 0 }); // Offset from bottom right
+  const isResizingRef = useRef(false);
+  const isDraggingRef = useRef(false);
+  const dragStartRef = useRef({ startX: 0, startY: 0, initialW: 0, initialH: 0, posX: 0, posY: 0 });
+
+  // Web Speech Recognition setup
+  const recognitionRef = useRef(null);
 
   useEffect(() => {
     if (!isMinimized) {
       scrollToBottom();
     }
   }, [messages, loading, isMinimized]);
+
+  useEffect(() => {
+    // Initialize Web Speech API if supported
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      const recognition = new SpeechRecognition();
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      recognition.lang = 'en-US';
+
+      recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        setInput(prev => (prev ? `${prev} ${transcript}` : transcript));
+        setIsVoiceActive(false);
+        toast.success("Voice transcribed!");
+      };
+
+      recognition.onerror = () => {
+        setIsVoiceActive(false);
+        toast.error("Voice input failed or timed out.");
+      };
+
+      recognition.onend = () => {
+        setIsVoiceActive(false);
+      };
+
+      recognitionRef.current = recognition;
+    }
+  }, []);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -55,11 +98,12 @@ const PrivateAiChatDrawer = ({ isOpen, onClose, note }) => {
     setShowScrollBottom(scrollHeight - scrollTop - clientHeight > 100);
   };
 
+  // Dynamic Prompts based on Document Title
   const suggestedPrompts = [
-    "Summarize key takeaways",
-    "Explain main concepts",
-    "List core definitions",
-    "Key methodology"
+    `Summarize "${note?.title?.slice(0, 20) || 'document'}"`,
+    "Explain key methodology",
+    "List core definitions & terms",
+    "What are main limitations?"
   ];
 
   if (!isOpen) return null;
@@ -121,12 +165,102 @@ const PrivateAiChatDrawer = ({ isOpen, onClose, note }) => {
     ]);
   };
 
-  // Render via React Portal directly into document.body to break out of any parent CSS transforms/modals
+  const toggleVoiceInput = () => {
+    if (!recognitionRef.current) {
+      toast.error("Voice dictation is not supported in this browser.");
+      return;
+    }
+    if (isVoiceActive) {
+      recognitionRef.current.stop();
+      setIsVoiceActive(false);
+    } else {
+      setIsVoiceActive(true);
+      recognitionRef.current.start();
+      toast("Listening...", { icon: '🎙️' });
+    }
+  };
+
+  // --- Dynamic Drag-to-Resize Logic ---
+  const handleResizeStart = (e, direction) => {
+    e.preventDefault();
+    e.stopPropagation();
+    isResizingRef.current = true;
+    dragStartRef.current = {
+      startX: e.clientX,
+      startY: e.clientY,
+      initialW: dimensions.width,
+      initialH: dimensions.height
+    };
+
+    const handleMouseMove = (moveEvent) => {
+      if (!isResizingRef.current) return;
+      const deltaX = dragStartRef.current.startX - moveEvent.clientX; // Left drag increases width
+      const deltaY = dragStartRef.current.startY - moveEvent.clientY; // Top drag increases height
+
+      setDimensions({
+        width: Math.min(Math.max(dragStartRef.current.initialW + deltaX, 320), 800),
+        height: Math.min(Math.max(dragStartRef.current.initialH + deltaY, 350), window.innerHeight - 40)
+      });
+    };
+
+    const handleMouseUp = () => {
+      isResizingRef.current = false;
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+  };
+
+  // --- Dynamic Drag-to-Move Header Logic ---
+  const handleHeaderDragStart = (e) => {
+    if (e.target.closest('button')) return; // Ignore buttons
+    isDraggingRef.current = true;
+    dragStartRef.current = {
+      startX: e.clientX,
+      startY: e.clientY,
+      posX: position.x,
+      posY: position.y
+    };
+
+    const handleMouseMove = (moveEvent) => {
+      if (!isDraggingRef.current) return;
+      const deltaX = moveEvent.clientX - dragStartRef.current.startX;
+      const deltaY = moveEvent.clientY - dragStartRef.current.startY;
+
+      setPosition({
+        x: dragStartRef.current.posX + deltaX,
+        y: dragStartRef.current.posY + deltaY
+      });
+    };
+
+    const handleMouseUp = () => {
+      isDraggingRef.current = false;
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+  };
+
+  const resetPositionAndSize = () => {
+    setPosition({ x: 0, y: 0 });
+    setDimensions({ width: 420, height: 640 });
+    setIsMaximized(false);
+    toast.success("Chat position and size reset!");
+  };
+
+  // Render directly to document.body via React Portal
   const content = (
     <div className="font-sans">
-      {/* Minimized Facebook Chat Dock Bar */}
+      {/* Minimized Bottom Facebook Chat Dock */}
       {isMinimized ? (
-        <div className="fixed bottom-0 right-4 sm:right-8 z-[99999] animate-bounce-short">
+        <div 
+          className="fixed bottom-0 right-4 sm:right-8 z-[99999] animate-bounce-short"
+          style={{ transform: `translate(${position.x}px, ${position.y}px)` }}
+        >
           <button
             onClick={() => setIsMinimized(false)}
             className="bg-primary text-primary-content font-semibold px-4 py-2.5 rounded-t-xl shadow-2xl flex items-center gap-2.5 border-t border-x border-primary-content/20 hover:brightness-110 transition-all cursor-pointer"
@@ -142,14 +276,59 @@ const PrivateAiChatDrawer = ({ isOpen, onClose, note }) => {
           </button>
         </div>
       ) : (
-        /* Full Facebook-style Chat Dock Fixed to Screen Viewport */
+        /* Full Dynamic Resizable & Draggable Chat Window */
         <div 
-          className={`fixed bottom-0 right-3 sm:right-6 z-[99999] w-[92vw] sm:w-[390px] md:w-[430px] bg-base-100 shadow-2xl border-t border-x border-base-300 rounded-t-2xl flex flex-col transition-all duration-300 ${
-            isTall ? 'h-[820px] max-h-[94vh]' : 'h-[620px] max-h-[86vh]'
+          className={`fixed bottom-0 right-3 sm:right-6 z-[99999] bg-base-100 shadow-2xl border-t border-x border-base-300 rounded-t-2xl flex flex-col transition-all duration-75 ${
+            isMaximized ? 'w-[96vw] h-[94vh] bottom-2 right-2 rounded-2xl' : ''
           }`}
+          style={
+            !isMaximized 
+              ? { 
+                  width: `${dimensions.width}px`, 
+                  height: `${dimensions.height}px`,
+                  maxWidth: '96vw',
+                  maxHeight: '94vh',
+                  transform: `translate(${position.x}px, ${position.y}px)` 
+                } 
+              : {}
+          }
         >
-          {/* Facebook-style Header Bar */}
-          <div className="px-4 py-2.5 border-b border-base-300 flex items-center justify-between bg-base-200/90 rounded-t-2xl shrink-0 select-none">
+          {/* Dynamic Top-Left Corner Resize Handle */}
+          {!isMaximized && (
+            <div
+              onMouseDown={(e) => handleResizeStart(e, 'corner')}
+              className="absolute -top-2 -left-2 size-5 cursor-nwse-resize z-50 flex items-center justify-center text-primary/60 hover:text-primary hover:scale-125 transition-all"
+              title="Drag corner to dynamically resize width & height"
+            >
+              <GripHorizontalIcon className="size-4 -rotate-45" />
+            </div>
+          )}
+
+          {/* Dynamic Top Edge Height Resize Handle */}
+          {!isMaximized && (
+            <div
+              onMouseDown={(e) => handleResizeStart(e, 'top')}
+              className="absolute -top-1.5 inset-x-0 h-3 cursor-ns-resize z-40 hover:bg-primary/20 transition-all rounded-t-2xl"
+              title="Drag top edge to dynamically change height"
+            />
+          )}
+
+          {/* Dynamic Left Edge Width Resize Handle */}
+          {!isMaximized && (
+            <div
+              onMouseDown={(e) => handleResizeStart(e, 'left')}
+              className="absolute -left-1.5 inset-y-0 w-3 cursor-ew-resize z-40 hover:bg-primary/20 transition-all rounded-l-2xl"
+              title="Drag left edge to dynamically change width"
+            />
+          )}
+
+          {/* Draggable Facebook-style Header Bar */}
+          <div 
+            onMouseDown={handleHeaderDragStart}
+            onDoubleClick={resetPositionAndSize}
+            className="px-4 py-2.5 border-b border-base-300 flex items-center justify-between bg-base-200/90 rounded-t-2xl shrink-0 select-none cursor-move hover:bg-base-200"
+            title="Drag header to move floating window • Double-click to reset"
+          >
             <div className="flex items-center gap-2.5 min-w-0">
               <div className="relative p-1.5 rounded-lg bg-secondary/15 text-secondary shrink-0">
                 <BotIcon className="size-4" />
@@ -158,28 +337,36 @@ const PrivateAiChatDrawer = ({ isOpen, onClose, note }) => {
               <div className="min-w-0">
                 <h3 className="font-bold text-xs flex items-center gap-1.5 leading-tight truncate">
                   <span className="truncate">{note?.title || 'AI Assistant'}</span>
-                  <span className="badge badge-xs badge-secondary text-[9px] shrink-0">AI</span>
+                  <span className="badge badge-xs badge-secondary text-[9px] shrink-0">Dynamic</span>
                 </h3>
-                <p className="text-[10px] text-base-content/60 truncate">Screen Fixed • Document Context</p>
+                <p className="text-[10px] text-base-content/60 truncate">Draggable & Resizable Dock</p>
               </div>
             </div>
 
-            {/* Action Controls */}
+            {/* Header Action Controls */}
             <div className="flex items-center gap-0.5 shrink-0">
+              <button 
+                onClick={resetPositionAndSize} 
+                className="btn btn-ghost btn-xs btn-square hover:bg-base-300" 
+                title="Reset Size & Position"
+              >
+                <RefreshCwIcon className="size-3 text-base-content/60" />
+              </button>
+
               <button 
                 onClick={handleClear} 
                 className="btn btn-ghost btn-xs btn-square hover:bg-base-300" 
-                title="Clear Chat"
+                title="Clear Chat History"
               >
                 <Trash2Icon className="size-3.5 text-base-content/60" />
               </button>
-              
+
               <button 
-                onClick={() => setIsTall(!isTall)} 
+                onClick={() => setIsMaximized(!isMaximized)} 
                 className="btn btn-ghost btn-xs btn-square hover:bg-base-300" 
-                title={isTall ? "Standard Height" : "Make Taller (Long Window)"}
+                title={isMaximized ? "Restore Size" : "Maximize Fullscreen"}
               >
-                {isTall ? <Minimize2Icon className="size-3.5 text-base-content/60" /> : <Maximize2Icon className="size-3.5 text-base-content/60" />}
+                {isMaximized ? <Minimize2Icon className="size-3.5 text-base-content/60" /> : <MaximizeIcon className="size-3.5 text-base-content/60" />}
               </button>
 
               <button 
@@ -200,7 +387,7 @@ const PrivateAiChatDrawer = ({ isOpen, onClose, note }) => {
             </div>
           </div>
 
-          {/* Suggested Quick Prompts Bar */}
+          {/* Dynamic Quick Prompt Pills Bar */}
           <div className="px-3 py-1.5 bg-base-200/40 border-b border-base-300/60 overflow-x-auto whitespace-nowrap custom-scrollbar flex gap-1.5 shrink-0">
             {suggestedPrompts.map((prompt, idx) => (
               <button
@@ -214,7 +401,7 @@ const PrivateAiChatDrawer = ({ isOpen, onClose, note }) => {
             ))}
           </div>
 
-          {/* Message History Container */}
+          {/* Scrollable Message History Area */}
           <div 
             ref={scrollContainerRef}
             onScroll={handleScroll}
@@ -231,7 +418,7 @@ const PrivateAiChatDrawer = ({ isOpen, onClose, note }) => {
                 >
                   <p className="whitespace-pre-wrap">{msg.text}</p>
 
-                  {/* Document Citations */}
+                  {/* Dynamic Document Citations */}
                   {msg.citations && msg.citations.length > 0 && (
                     <div className="mt-2 pt-1.5 border-t border-base-300/50 flex flex-wrap items-center gap-1 text-[10px] text-base-content/70">
                       <span className="font-semibold text-[9px] uppercase tracking-wider text-base-content/50 flex items-center gap-1">
@@ -246,7 +433,7 @@ const PrivateAiChatDrawer = ({ isOpen, onClose, note }) => {
                   )}
                 </div>
 
-                {/* Assistant Action Bar */}
+                {/* Assistant Message Actions */}
                 {msg.role === 'assistant' && i > 0 && (
                   <div className="flex items-center gap-2 mt-1 text-[10px] text-base-content/40 pl-1">
                     <button 
@@ -266,49 +453,46 @@ const PrivateAiChatDrawer = ({ isOpen, onClose, note }) => {
               </div>
             ))}
 
-            {/* Loading Indicator */}
+            {/* Dynamic Thinking State */}
             {loading && (
               <div className="flex items-start gap-2">
                 <div className="bg-base-200 border border-base-300 rounded-2xl rounded-bl-xs px-3.5 py-2.5 flex items-center gap-2 text-xs text-base-content/60">
                   <span className="loading loading-dots loading-xs text-secondary"></span>
-                  <span className="text-[11px]">Thinking & searching note context...</span>
+                  <span className="text-[11px]">Thinking & searching document context...</span>
                 </div>
               </div>
             )}
             <div ref={messagesEndRef} />
 
-            {/* Scroll To Bottom Button */}
+            {/* Dynamic Scroll-To-Bottom Floating Button */}
             {showScrollBottom && (
               <button
                 onClick={scrollToBottom}
-                className="sticky bottom-2 left-1/2 -translate-x-1/2 btn btn-circle btn-xs btn-primary shadow-lg flex items-center justify-center transition-all animate-bounce"
-                title="Scroll to latest"
+                className="sticky bottom-2 left-1/2 -translate-x-1/2 btn btn-circle btn-xs btn-primary shadow-lg flex items-center justify-center transition-all animate-bounce z-30"
+                title="Scroll to latest message"
               >
                 <ArrowDownIcon className="size-3" />
               </button>
             )}
           </div>
 
-          {/* Facebook-style Input Footer */}
+          {/* Facebook-style Input Footer with Dynamic Dictation */}
           <form 
             onSubmit={(e) => { e.preventDefault(); handleSendMessage(); }} 
             className="p-2.5 border-t border-base-300 bg-base-100 rounded-b-2xl flex items-center gap-1.5 shrink-0"
           >
             <button
               type="button"
-              onClick={() => {
-                setIsVoiceActive(!isVoiceActive);
-                toast(isVoiceActive ? "Voice input disabled" : "Listening for voice input...", { icon: '🎙️' });
-              }}
-              className={`btn btn-circle btn-xs btn-ghost ${isVoiceActive ? 'text-error animate-pulse' : 'text-base-content/60'}`}
-              title="Voice Dictation"
+              onClick={toggleVoiceInput}
+              className={`btn btn-circle btn-xs btn-ghost ${isVoiceActive ? 'text-error animate-pulse bg-error/10' : 'text-base-content/60'}`}
+              title={isVoiceActive ? "Listening... (Click to stop)" : "Voice Dictation"}
             >
               <MicIcon className="size-3.5" />
             </button>
 
             <input
               type="text"
-              placeholder="Type a message..."
+              placeholder={isVoiceActive ? "Listening to your voice..." : "Type a message..."}
               value={input}
               onChange={(e) => setInput(e.target.value)}
               disabled={loading}
