@@ -3,11 +3,12 @@ import { useNavigate, Link } from "react-router";
 import toast from "react-hot-toast";
 import api from "../lib/axios";
 import { AuthContext } from "../context/authContext.jsx";
-import { ArrowLeftIcon } from "lucide-react";
+import { ArrowLeftIcon, EyeIcon, EyeOffIcon } from "lucide-react";
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -92,16 +93,30 @@ const LoginPage = () => {
               <label className="label">
                 <span className="label-text">Password</span>
               </label>
-              <input
-                type="password"
-                placeholder="••••••••"
-                className={`input input-bordered w-full ${passwordError ? 'input-error' : ''}`}
-                value={password}
-                onChange={(e) => {
-                  setPassword(e.target.value);
-                  setPasswordError("");
-                }}
-              />
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  placeholder="••••••••"
+                  className={`input input-bordered w-full pr-10 ${passwordError ? 'input-error' : ''}`}
+                  value={password}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    setPasswordError("");
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-base-content/60 hover:text-base-content"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? (
+                    <EyeOffIcon className="h-5 w-5" />
+                  ) : (
+                    <EyeIcon className="h-5 w-5" />
+                  )}
+                </button>
+              </div>
               {passwordError && <p className="text-error text-sm mt-1">{passwordError}</p>}
             </div>
 

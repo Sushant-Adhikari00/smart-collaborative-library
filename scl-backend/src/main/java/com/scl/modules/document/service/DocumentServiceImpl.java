@@ -70,6 +70,7 @@ public class DocumentServiceImpl implements DocumentService {
             }
 
             String fileUrl = supabaseStorageUtil.storeFile(file);
+            String contentType = SupabaseStorageUtil.resolveContentType(file);
 
             // 1. Create and save Document first to get the database ID
             Document document = new Document();
@@ -77,7 +78,7 @@ public class DocumentServiceImpl implements DocumentService {
             document.setDescription(request.getDescription());
             document.setFileName(file.getOriginalFilename());
             document.setFileUrl(fileUrl);
-            document.setFileType(file.getContentType());
+            document.setFileType(contentType);
             document.setFileSize(file.getSize());
             document.setUploadedBy(request.getUploadedBy() != null ? request.getUploadedBy() : "System");
             document.setCategory(category);

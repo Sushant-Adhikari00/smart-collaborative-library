@@ -45,7 +45,7 @@ public class DocumentResourceService {
 
         String fileUrl = storageUtil.storeFile(file);
         String fileName = file.getOriginalFilename();
-        String fileType = file.getContentType() != null ? file.getContentType() : "application/octet-stream";
+        String fileType = SupabaseStorageUtil.resolveContentType(file);
         long fileSize = file.getSize();
 
         DocumentResource resource = DocumentResource.builder()
