@@ -230,21 +230,7 @@ const ResourceViewerModal = ({ isOpen, onClose, note }) => {
                   )}
                 </div>
 
-                {/* Related Documents */}
-                <div>
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-base-content/50 mb-1.5 flex items-center gap-1">
-                    <BookOpenIcon className="size-3" /> Related Resources
-                  </h4>
-                  <div className="space-y-1.5">
-                    {relatedDocs.map((doc, idx) => (
-                      <div key={idx} className="p-2 rounded-lg bg-base-200/60 border border-base-300 text-xs flex justify-between items-center">
-                        <span className="truncate font-medium text-primary">{doc.title}</span>
-                        <span className="badge badge-xs badge-ghost">{doc.category}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
+              
 
               {/* Action Buttons Panel */}
               <div className="pt-4 border-t border-base-300 space-y-2.5 shrink-0">
