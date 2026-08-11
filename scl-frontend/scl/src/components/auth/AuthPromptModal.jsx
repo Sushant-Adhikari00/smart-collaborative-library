@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { LockIcon, SparklesIcon, X } from 'lucide-react';
 
 /**
@@ -74,7 +74,7 @@ export default function AuthPromptModal({ isOpen, onClose, feature }) {
             Log In
           </button>
           <button
-            onClick={() => { onClose(); navigate('/register'); }}
+            onClick={() => { onClose(); navigate('/signup'); }}
             className="btn btn-outline btn-primary flex-1 font-bold"
           >
             Sign Up

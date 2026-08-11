@@ -56,6 +56,9 @@ const ResourceViewerModal = ({ isOpen, onClose, note }) => {
         }
       })
       .catch(() => { /* silent fallback */ });
+
+    const saved = JSON.parse(localStorage.getItem('scl_bookmarks') || '[]');
+    setIsBookmarked(saved.includes(docId));
   }, [isOpen, docId]);
 
   if (!isOpen || !note) return null;
@@ -122,8 +125,19 @@ const ResourceViewerModal = ({ isOpen, onClose, note }) => {
 
   const handleBookmarkToggle = () => {
     requireAuth('bookmark resources', () => {
-      setIsBookmarked(!isBookmarked);
-      toast.success(isBookmarked ? "Removed from bookmarks" : "Bookmarked resource!");
+      const saved = JSON.parse(localStorage.getItem('scl_bookmarks') || '[]');
+      let nextSaved;
+      if (isBookmarked) {
+        nextSaved = saved.filter(id => id !== docId);
+        setIsBookmarked(false);
+        toast.success("Removed from bookmarks");
+      } else {
+        nextSaved = [...saved, docId];
+        setIsBookmarked(true);
+        toast.success("Bookmarked resource!");
+      }
+      localStorage.setItem('scl_bookmarks', JSON.stringify(nextSaved));
+      window.dispatchEvent(new Event('bookmarks_changed'));
     });
   };
 
@@ -134,25 +148,25 @@ const ResourceViewerModal = ({ isOpen, onClose, note }) => {
 
   return (
     <>
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-md p-2 sm:p-4 overflow-hidden">
-        {/* Main 80-90% Centered Modal Container */}
-        <div className="bg-base-100 rounded-2xl shadow-2xl w-full max-w-7xl h-[88vh] max-h-[88vh] my-auto flex flex-col overflow-hidden border border-base-300">
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-2 sm:p-4 overflow-hidden">
+        {/* Main Centered Modal Container */}
+        <div className="bg-base-100 rounded-lg shadow-xl w-full max-w-7xl h-[88vh] max-h-[88vh] my-auto flex flex-col overflow-hidden border border-base-300">
           
           {/* Header Bar */}
-          <div className="bg-base-200/90 px-4 md:px-6 py-3 border-b border-base-300 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0">
+          <div className="bg-base-200 px-4 md:px-6 py-3 border-b border-base-300 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0">
             <div className="flex items-center gap-3 min-w-0">
-              <div className="p-2 rounded-xl bg-primary/10 text-primary shrink-0">
-                <FileTextIcon className="size-6" />
+              <div className="p-2 rounded bg-base-300 text-primary shrink-0">
+                <FileTextIcon className="size-5" />
               </div>
               <div className="min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
                   <h2 className="font-bold text-sm md:text-base text-base-content truncate max-w-[280px] md:max-w-md">{note.title}</h2>
                   {isVerified && (
-                    <span className="badge badge-sm badge-success gap-1 font-semibold shrink-0">
-                      <CheckCircle2Icon className="size-3" /> Teacher Verified
+                    <span className="badge badge-sm badge-success gap-1 font-semibold shrink-0 rounded">
+                      <CheckCircle2Icon className="size-3" /> Verified
                     </span>
                   )}
-                  <span className="badge badge-sm badge-outline font-medium shrink-0">
+                  <span className="badge badge-sm badge-outline font-medium shrink-0 rounded">
                     {note.category || 'Academic Resource'}
                   </span>
                 </div>
@@ -165,7 +179,7 @@ const ResourceViewerModal = ({ isOpen, onClose, note }) => {
                   <span>•</span>
                   <button 
                     onClick={() => setShowDiscussionModal(true)}
-                    className="flex items-center gap-1 text-warning hover:text-warning-hover transition-colors font-semibold cursor-pointer"
+                    className="flex items-center gap-1 text-warning hover:underline font-semibold cursor-pointer"
                     title="View Ratings & Feedback"
                   >
                     <StarIcon className="size-3.5 fill-warning text-warning" /> {rating}
@@ -173,7 +187,7 @@ const ResourceViewerModal = ({ isOpen, onClose, note }) => {
                   <span>•</span>
                   <button
                     onClick={() => setShowDiscussionModal(true)}
-                    className="flex items-center gap-1 text-secondary hover:text-primary transition-colors font-semibold cursor-pointer"
+                    className="flex items-center gap-1 text-secondary hover:underline font-semibold cursor-pointer"
                     title="Open Comments & Discussion"
                   >
                     💬 {commentsCount} comments
@@ -189,19 +203,19 @@ const ResourceViewerModal = ({ isOpen, onClose, note }) => {
             </div>
           </div>
 
-          {/* Modal Main Body (Left 68% PDF, Right 32% Info/Actions - Stacked on Mobile) */}
+          {/* Modal Main Body */}
           <div className="flex-1 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden">
             {/* Left Side - PDF Viewer */}
-            <div className="w-full lg:w-[68%] min-h-[420px] lg:h-full p-3 bg-base-300/40 border-b lg:border-b-0 lg:border-r border-base-300 flex flex-col">
+            <div className="w-full lg:w-[68%] min-h-[420px] lg:h-full p-3 bg-base-200/30 border-b lg:border-b-0 lg:border-r border-base-300 flex flex-col">
               <PdfViewer fileUrl={note.fileUrl} title={note.title} />
             </div>
 
             {/* Right Side - Document Metadata & Actions */}
             <div className="w-full lg:w-[32%] h-auto lg:h-full overflow-y-auto custom-scrollbar p-4 sm:p-5 bg-base-100 flex flex-col justify-between space-y-5">
-              <div className="space-y-5">
+              <div className="space-y-4">
                 {/* Description Section */}
                 <div>
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-base-content/50 mb-1.5">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-base-content/40 mb-1">
                     Description
                   </h4>
                   <p className="text-xs text-base-content/80 leading-relaxed">
@@ -211,32 +225,32 @@ const ResourceViewerModal = ({ isOpen, onClose, note }) => {
 
                 {/* Keywords & Tags */}
                 <div>
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-base-content/50 mb-1.5 flex items-center gap-1">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-base-content/40 mb-1 flex items-center gap-1">
                     <TagIcon className="size-3" /> Keywords & Tags
                   </h4>
-                  <div className="flex flex-wrap gap-1.5">
+                  <div className="flex flex-wrap gap-1">
                     {keywords.map((kw, i) => (
-                      <span key={i} className="badge badge-xs badge-neutral font-normal">{kw}</span>
+                      <span key={i} className="badge badge-xs badge-neutral font-normal rounded">{kw}</span>
                     ))}
                   </div>
                 </div>
 
-                {/* AI Generated Summary */}
-                <div className="bg-secondary/5 border border-secondary/20 p-3 rounded-xl space-y-1.5">
-                  <h4 className="text-xs font-bold text-secondary flex items-center gap-1.5">
-                    <SparklesIcon className="size-3.5" /> AI Executive Summary
+                {/* AI Generated Summary - Flat Styling */}
+                <div className="bg-base-200/50 border border-base-300 p-3 rounded-md space-y-1.5">
+                  <h4 className="text-xs font-bold text-base-content flex items-center gap-1.5">
+                    <SparklesIcon className="size-3.5 text-primary" /> AI Executive Summary
                   </h4>
                   {note.aiSummary ? (
-                    <p className="text-[11.5px] text-base-content/90 leading-relaxed font-medium">
+                    <p className="text-xs text-base-content leading-relaxed">
                       {note.aiSummary}
                     </p>
                   ) : (
-                    <p className="text-[11px] text-base-content/60 italic leading-relaxed">
+                    <p className="text-xs text-base-content/50 italic leading-relaxed">
                       AI summary is processing or not available.
                     </p>
                   )}
                   {note.aiKeyPoints && (
-                    <ul className="text-[11px] text-base-content/80 space-y-1.5 list-disc list-inside leading-normal pt-1 border-t border-secondary/10 mt-1">
+                    <ul className="text-xs text-base-content/85 space-y-1 list-disc list-inside leading-normal pt-1 border-t border-base-300 mt-1">
                       {note.aiKeyPoints.split('\n').filter(p => p.trim()).map((point, i) => (
                         <li key={i}>{point.replace(/^[-\*\s•\d+\.\)]+/, '')}</li>
                       ))}
@@ -246,10 +260,10 @@ const ResourceViewerModal = ({ isOpen, onClose, note }) => {
               </div>
 
               {/* Action Buttons Panel */}
-              <div className="pt-4 border-t border-base-300 space-y-2.5 shrink-0">
+              <div className="pt-4 border-t border-base-300 space-y-2 shrink-0">
                 {/* Guest notice banner */}
                 {!user && (
-                  <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-warning/10 border border-warning/30 text-warning text-[11px] font-medium">
+                  <div className="flex items-center gap-2 px-3 py-1.5 rounded bg-warning/10 border border-warning/20 text-warning text-xs font-medium">
                     <span>🔒</span>
                     <span>Log in to unlock all features</span>
                   </div>
@@ -257,21 +271,21 @@ const ResourceViewerModal = ({ isOpen, onClose, note }) => {
 
                 <button
                   onClick={() => requireAuth('chat with the AI Assistant', () => setShowAiDrawer(true))}
-                  className="btn btn-sm btn-secondary w-full flex items-center justify-center gap-2 font-semibold shadow-xs"
+                  className="btn btn-sm btn-primary w-full flex items-center justify-center gap-1.5 font-semibold rounded"
                 >
-                  <BotIcon className="size-4" /> Chat with AI Assistant
+                  <BotIcon className="size-4" /> Ask AI Assistant
                 </button>
 
                 <button
                   onClick={() => requireAuth('comment and discuss', () => setShowDiscussionModal(true))}
-                  className="btn btn-sm btn-primary w-full flex items-center justify-center gap-2 font-semibold shadow-xs"
+                  className="btn btn-sm btn-outline btn-primary w-full flex items-center justify-center gap-1.5 font-semibold rounded"
                 >
                   <MessageSquareIcon className="size-4" /> Discussion & Comments
                 </button>
 
                 <button
                   onClick={handleCollaborateClick}
-                  className="btn btn-sm btn-accent w-full flex items-center justify-center gap-2 font-semibold shadow-xs"
+                  className="btn btn-sm btn-outline btn-secondary w-full flex items-center justify-center gap-1.5 font-semibold rounded"
                 >
                   <UsersIcon className="size-4" /> Collaborate
                 </button>
@@ -279,14 +293,14 @@ const ResourceViewerModal = ({ isOpen, onClose, note }) => {
                 <div className="grid grid-cols-2 gap-2 pt-1">
                   <button
                     onClick={handleBookmarkToggle}
-                    className={`btn btn-xs btn-outline ${isBookmarked ? 'btn-warning' : 'btn-ghost'} flex items-center justify-center gap-1`}
+                    className={`btn btn-xs rounded ${isBookmarked ? 'btn-warning text-warning-content' : 'btn-outline btn-neutral'} flex items-center justify-center gap-1`}
                   >
                     <BookmarkIcon className="size-3" /> {isBookmarked ? 'Saved' : 'Bookmark'}
                   </button>
 
                   <button
                     onClick={handleShare}
-                    className="btn btn-xs btn-outline btn-ghost flex items-center justify-center gap-1"
+                    className="btn btn-xs btn-outline btn-neutral rounded flex items-center justify-center gap-1"
                   >
                     <Share2Icon className="size-3" /> Share
                   </button>
@@ -295,7 +309,7 @@ const ResourceViewerModal = ({ isOpen, onClose, note }) => {
                 {canDelete && (
                   <button
                     onClick={handleDelete}
-                    className="btn btn-xs btn-error btn-outline w-full flex items-center justify-center gap-1 font-bold mt-2"
+                    className="btn btn-xs btn-error btn-outline w-full flex items-center justify-center gap-1 font-bold mt-2 rounded"
                   >
                     <Trash2Icon className="size-3.5" /> Delete Resource
                   </button>

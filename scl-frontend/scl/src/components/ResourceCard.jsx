@@ -49,7 +49,7 @@ const ResourceCard = ({ note, setNotes }) => {
 
   const docId = note?.id || note?._id;
 
-  // Load live rating on mount
+  // Load live rating and bookmark state on mount
   useEffect(() => {
     if (!docId) return;
     documentApi.getRating(docId)
@@ -60,6 +60,9 @@ const ResourceCard = ({ note, setNotes }) => {
         }
       })
       .catch(() => { /* silent fallback */ });
+
+    const saved = JSON.parse(localStorage.getItem('scl_bookmarks') || '[]');
+    setIsBookmarked(saved.includes(docId));
   }, [docId]);
 
   const isAdmin = Boolean(user && (user.role === 'ROLE_ADMIN' || user.role === 'admin' || user.role === 'ADMIN'));
@@ -113,8 +116,19 @@ const ResourceCard = ({ note, setNotes }) => {
   const handleBookmarkToggle = (e) => {
     e.stopPropagation();
     requireAuth('bookmark resources', () => {
-      setIsBookmarked(!isBookmarked);
-      toast.success(isBookmarked ? "Removed from bookmarks" : "Bookmarked resource!");
+      const saved = JSON.parse(localStorage.getItem('scl_bookmarks') || '[]');
+      let nextSaved;
+      if (isBookmarked) {
+        nextSaved = saved.filter(id => id !== docId);
+        setIsBookmarked(false);
+        toast.success("Removed from bookmarks");
+      } else {
+        nextSaved = [...saved, docId];
+        setIsBookmarked(true);
+        toast.success("Bookmarked resource!");
+      }
+      localStorage.setItem('scl_bookmarks', JSON.stringify(nextSaved));
+      window.dispatchEvent(new Event('bookmarks_changed'));
     });
   };
 
@@ -159,21 +173,19 @@ const ResourceCard = ({ note, setNotes }) => {
   };
 
   return (
-    <>
-      <div 
+    <>      <div 
         onClick={handleCardClick}
-        className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-base-content/10 bg-base-100 shadow-xs transition-all duration-300 hover:-translate-y-1 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 cursor-pointer"
+        className="group flex flex-col justify-between overflow-hidden rounded-lg border border-base-300 bg-base-100 shadow-xs hover:border-primary/40 transition-all duration-200 cursor-pointer"
       >
-        {/* Card Header Cover Gradient */}
-        <div className="relative h-28 w-full bg-gradient-to-br from-primary/5 via-secondary/5 to-accent/5 p-4 flex flex-col justify-between border-b border-base-content/5">
-          {/* File Type, Verified Status, and Top Delete Action */}
-          <div className="flex items-center justify-between gap-1">
-            <div className="flex items-center gap-1.5">
-              <span className="px-2.5 py-0.5 rounded-full bg-base-200/80 text-[10px] font-mono font-bold tracking-wider text-base-content border border-base-content/5 shadow-2xs">
+        {/* Card Header Cover - Flat Clean Styling */}
+        <div className="p-4 pb-2 flex flex-col gap-2 bg-base-200/40 border-b border-base-200">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="px-2 py-0.5 rounded bg-base-300 text-[10px] font-mono font-bold tracking-wider text-base-content border border-base-300">
                 {fileType}
               </span>
               {isVerified && (
-                <span className="flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-success/10 text-[10px] font-bold text-success border border-success/20 shadow-2xs">
+                <span className="flex items-center gap-0.5 px-2 py-0.5 rounded bg-success/10 text-[10px] font-bold text-success border border-success/10">
                   <CheckCircle2Icon className="size-3" /> Verified
                 </span>
               )}
@@ -182,26 +194,24 @@ const ResourceCard = ({ note, setNotes }) => {
             {canDelete && (
               <button
                 onClick={handleDelete}
-                className="btn btn-xs btn-error btn-outline hover:btn-error gap-1 px-2 text-[10px] font-bold shadow-sm z-10"
+                className="btn btn-xs btn-ghost text-error hover:bg-error/10 p-1 min-h-0 h-auto"
                 title="Delete Document"
               >
-                <Trash2Icon className="size-3" /> Delete
+                <Trash2Icon className="size-3.5" />
               </button>
             )}
           </div>
 
-          {/* Category & Rating */}
-          <div className="flex items-center justify-between">
-            <span className="px-2 py-0.5 rounded-md bg-base-100/90 text-[10px] font-semibold text-base-content/70 border border-base-content/5 shadow-2xs">
+          <div className="flex items-center justify-between mt-1 text-[11px] text-base-content/60">
+            <span className="font-semibold text-primary truncate max-w-[150px]">
               {category}
             </span>
 
             {/* Interactive Rating Dropdown */}
-            <div className="dropdown dropdown-end">
+            <div className="dropdown dropdown-end" onClick={(e) => e.stopPropagation()}>
               <label
                 tabIndex={0}
-                onClick={(e) => e.stopPropagation()}
-                className="flex items-center gap-1.5 bg-base-100/90 hover:bg-base-100 px-2.5 py-0.5 rounded-full text-xs font-bold text-warning border border-base-content/5 cursor-pointer transition-colors shadow-2xs"
+                className="flex items-center gap-1 bg-base-100 hover:bg-base-200 px-2 py-0.5 rounded text-xs font-bold text-warning border border-base-300 cursor-pointer"
                 title={userRating ? `Your rating: ${userRating} ⭐ — Click to change` : 'Click to rate this document'}
               >
                 <StarIcon className={`size-3 ${userRating ? 'fill-warning text-warning' : 'text-base-content/30'}`} />
@@ -209,10 +219,9 @@ const ResourceCard = ({ note, setNotes }) => {
               </label>
               <ul
                 tabIndex={0}
-                className="dropdown-content z-20 menu p-2 shadow-xl bg-base-100 rounded-xl w-40 text-xs border border-base-content/10 space-y-1 mt-1.5"
-                onClick={(e) => e.stopPropagation()}
+                className="dropdown-content z-20 menu p-1.5 shadow-md bg-base-100 rounded-md w-36 text-xs border border-base-300 space-y-0.5 mt-1"
               >
-                <li className="menu-title text-[10px] uppercase font-bold text-base-content/40 px-2 py-1">
+                <li className="menu-title text-[9px] uppercase font-bold text-base-content/40 px-2 py-1">
                   {userRating ? `Your rating: ${userRating} ⭐` : 'Rate Resource'}
                 </li>
                 {[5, 4, 3, 2, 1].map((stars) => (
@@ -220,11 +229,11 @@ const ResourceCard = ({ note, setNotes }) => {
                     <button
                       onClick={() => handleRate(stars)}
                       disabled={ratingLoading}
-                      className={`flex items-center justify-between font-semibold py-1.5 px-2.5 rounded-lg transition-colors ${
-                        userRating === stars ? 'text-warning bg-warning/10' : 'text-warning hover:bg-base-200'
+                      className={`flex items-center justify-between font-semibold py-1 px-2 rounded hover:bg-base-200 transition-colors ${
+                        userRating === stars ? 'text-warning bg-warning/10' : 'text-warning'
                       }`}
                     >
-                      <span className="flex items-center gap-1">
+                      <span className="flex items-center gap-0.5">
                         {'⭐'.repeat(stars)}
                       </span>
                       {userRating === stars && <span className="text-[9px] text-success">✓</span>}
@@ -237,7 +246,7 @@ const ResourceCard = ({ note, setNotes }) => {
         </div>
 
         {/* Card Main Body */}
-        <div className="p-4 space-y-3 flex-1 flex flex-col justify-between">
+        <div className="p-4 flex-1 flex flex-col justify-between gap-4">
           <div className="space-y-2">
             {/* Document Title */}
             <h3 className="text-sm font-bold text-base-content leading-snug group-hover:text-primary transition-colors line-clamp-2">
@@ -245,7 +254,7 @@ const ResourceCard = ({ note, setNotes }) => {
             </h3>
 
             {/* Short Description */}
-            <p className="text-[11px] text-base-content/70 line-clamp-2 leading-relaxed">
+            <p className="text-xs text-base-content/70 line-clamp-2 leading-relaxed">
               {description}
             </p>
 
@@ -260,7 +269,7 @@ const ResourceCard = ({ note, setNotes }) => {
                   .map((kw) => (
                     <span
                       key={kw}
-                      className="px-2 py-0.5 rounded-full bg-primary/5 text-[9px] font-bold text-primary border border-primary/10 tracking-wide"
+                      className="px-1.5 py-0.5 rounded bg-base-200 text-[9px] font-medium text-base-content/60 border border-base-300"
                     >
                       #{kw}
                     </span>
@@ -269,104 +278,57 @@ const ResourceCard = ({ note, setNotes }) => {
             )}
           </div>
 
-          <div className="space-y-2 pt-2 border-t border-base-content/5">
+          <div className="space-y-2 pt-2 border-t border-base-200">
             {/* Author Name & Upload Date */}
-            <div className="text-[10px] text-base-content/50 flex items-center justify-between">
+            <div className="text-[11px] text-base-content/50 flex items-center justify-between">
               <span className="font-semibold truncate max-w-[130px]">By {authorName}</span>
               <span>{uploadDate}</span>
             </div>
 
             {/* Engagement Metrics Row */}
-            <div className="flex items-center gap-3 text-[10px] text-base-content/60">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setShowDiscussionModal(true);
-                }}
-                className="flex items-center gap-1 hover:text-primary transition-colors cursor-pointer font-medium"
-                title="Open Comments & Discussion"
-              >
-                <MessageSquareIcon className="size-3 text-secondary" /> {totalComments} Comments
-              </button>
+            <div className="flex items-center justify-between text-[11px] text-base-content/60">
+              <span className="flex items-center gap-1 font-medium">
+                <MessageSquareIcon className="size-3 text-primary" /> {totalComments} comments
+              </span>
               {isOwner && (
-                <span className="px-1.5 py-0.5 rounded bg-primary/10 text-primary text-[9px] font-bold ml-auto uppercase tracking-wide">
-                  Yours
+                <span className="px-1.5 py-0.5 rounded bg-primary/10 text-primary text-[9px] font-bold uppercase tracking-wide">
+                  Your Upload
                 </span>
               )}
             </div>
           </div>
         </div>
 
-        {/* Card Footer Actions */}
-        <div className="px-3.5 py-2 bg-base-200/30 border-t border-base-content/5 flex items-center justify-between gap-1">
-          <div className="flex items-center gap-1.5">
-            <button
-              onClick={() => setShowViewerModal(true)}
-              className="px-2.5 py-1 rounded-md text-[10px] font-bold text-primary hover:bg-primary/10 transition-colors flex items-center gap-1"
-              title="View Resource Modal"
-            >
-              <EyeIcon className="size-3.5" /> View
-            </button>
+        {/* Card Footer Actions - Simplified to View and Bookmark/Share */}
+        <div className="px-4 py-2.5 bg-base-200/20 border-t border-base-200 flex items-center justify-between gap-2">
+          <button
+            onClick={() => setShowViewerModal(true)}
+            className="btn btn-xs btn-primary font-semibold flex-1 rounded px-3 py-1 flex items-center justify-center gap-1.5"
+            title="Open Document Viewer"
+          >
+            <EyeIcon className="size-3.5" /> View Document
+          </button>
 
-            {user && (
-              <>
-                <button
-                  onClick={handleAiChatClick}
-                  className="px-2.5 py-1 rounded-md text-[10px] font-bold text-secondary hover:bg-secondary/10 transition-colors flex items-center gap-1"
-                  title="Chat with AI"
-                >
-                  <BotIcon className="size-3.5" /> AI
-                </button>
-
-                <button
-                  onClick={handleCollaborateClick}
-                  className="px-2.5 py-1 rounded-md text-[10px] font-bold text-accent hover:bg-accent/10 transition-colors flex items-center gap-1"
-                  title="Collaborate"
-                >
-                  <UsersIcon className="size-3.5" /> Collaborate
-                </button>
-              </>
-            )}
-          </div>
-
-          {/* Icon Quick Actions */}
-          <div className="flex items-center gap-0.5">
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowDiscussionModal(true);
-              }}
-              className="p-1 rounded-md text-base-content/40 hover:text-primary hover:bg-base-200/50 transition-colors"
-              title="Comments & Discussion"
-            >
-              <MessageSquareIcon className="size-3.5" />
-            </button>
-
+          <div className="flex items-center gap-1">
             <button
               onClick={handleBookmarkToggle}
-              className={`p-1 rounded-md transition-colors ${isBookmarked ? 'text-warning hover:bg-warning/10' : 'text-base-content/40 hover:text-warning hover:bg-base-200/50'}`}
-              title="Bookmark"
+              className={`btn btn-xs btn-square rounded border border-base-300 ${
+                isBookmarked 
+                  ? 'btn-warning text-warning-content' 
+                  : 'btn-ghost text-base-content/60 hover:text-warning'
+              }`}
+              title={isBookmarked ? "Remove Bookmark" : "Save to Library"}
             >
-              <BookmarkIcon className={`size-3.5 ${isBookmarked ? 'fill-warning' : ''}`} />
+              <BookmarkIcon className={`size-3.5 ${isBookmarked ? 'fill-current' : ''}`} />
             </button>
 
             <button
               onClick={handleShare}
-              className="p-1 rounded-md text-base-content/40 hover:text-primary hover:bg-base-200/50 transition-colors"
-              title="Share"
+              className="btn btn-xs btn-square btn-ghost rounded border border-base-300 text-base-content/60 hover:text-primary"
+              title="Share Document"
             >
               <Share2Icon className="size-3.5" />
             </button>
-
-            {canDelete && (
-              <button
-                onClick={handleDelete}
-                className="p-1.5 rounded-md text-error hover:bg-error/10 border border-error/20 flex items-center gap-1 text-[10px] font-bold transition-all"
-                title="Delete Document"
-              >
-                <Trash2Icon className="size-3.5" /> Delete
-              </button>
-            )}
           </div>
         </div>
       </div>
